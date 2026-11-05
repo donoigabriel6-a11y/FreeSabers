@@ -2,6 +2,7 @@
 
 #include "beatsaber-hook/shared/utils/typedefs.h"
 #include "UnityEngine/MeshFilter.hpp"
+#include "UnityEngine/Quaternion.hpp"
 
 #include <algorithm>
 #include <cctype>
