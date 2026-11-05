@@ -5,7 +5,7 @@
 #include "hooks/UIHooks.hpp"
 #include "utils/CustomTypes.hpp"
 #include "scotland2/shared/modloader.h"
-#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "beatsaber-hook/shared/utils/logging.hpp"
 #include "UnityEngine/GameObject.hpp"
@@ -29,22 +29,16 @@ MOD_EXTERN_FUNC void late_load() noexcept {
 
     PaperLogger.info("Initializing FreeSabers...");
 
-    // Initialize config system
-    // Get the mod data path from the modloader
-    std::string modDataPath = "/sdcard/ModData/com.beatgames.beatsaber/Mods/FreeSabers";
-    Config::GetInstance().Initialize(modDataPath);
+    const std::string modDataPath = "/sdcard/ModData/com.beatgames.beatsaber/Mods/FreeSabers";
+    FreeSabers::Config::GetInstance().Initialize(modDataPath);
 
-    // Register custom types
-    RegisterCustomTypes();
+    FreeSabers::RegisterCustomTypes();
+    FreeSabers::Hooks::InstallSaberHooks();
+    FreeSabers::UI::InstallUIHooks();
 
-    // Install saber hooks
-    Hooks::InstallSaberHooks();
-
-    // Install UI hooks
-    UI::InstallUIHooks();
-
-    // Create FreeSabersController GameObject to persist across scenes
-    Il2CppString* nameStr = il2cpp_utils::createcsstr("FreeSabersController");
+    // Use the public IL2CPP string API rather than the unavailable
+    // il2cpp_utils::createcsstr helper.
+    Il2CppString* nameStr = il2cpp_functions::string_new("FreeSabersController");
     auto* go = GameObject::New_ctor(nameStr);
     Object::DontDestroyOnLoad(go);
     go->AddComponent<FreeSabers::FreeSabersController*>();
@@ -53,14 +47,10 @@ MOD_EXTERN_FUNC void late_load() noexcept {
 }
 
 MOD_EXTERN_FUNC void on_game_scene_loaded(int scene) noexcept {
-    // Called when a game scene is loaded
     PaperLogger.info("Game scene loaded: %d", scene);
-
-    // Reinitialize saber manager for new scene
-    SaberManager::GetInstance().ReloadPresets();
+    FreeSabers::SaberManager::GetInstance().ReloadPresets();
 }
 
 MOD_EXTERN_FUNC void on_game_scene_unloaded(int scene) noexcept {
-    // Called when a game scene is unloaded
     PaperLogger.info("Game scene unloaded: %d", scene);
 }
