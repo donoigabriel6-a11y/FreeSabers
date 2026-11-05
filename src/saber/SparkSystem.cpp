@@ -184,8 +184,8 @@ void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const
 
     UnityEngine::Vector3 cameraRight{1.0f, 0.0f, 0.0f};
     UnityEngine::Vector3 cameraUp{0.0f, 1.0f, 0.0f};
-    if (auto* camera = UnityEngine::Camera::get_main()) {
-        if (auto* transform = camera->get_transform()) {
+    if (UnityEngine::Camera* camera = UnityEngine::Camera::get_main()) {
+        if (UnityEngine::Transform* transform = camera->get_transform()) {
             cameraRight = transform->get_right();
             cameraUp = transform->get_up();
         }

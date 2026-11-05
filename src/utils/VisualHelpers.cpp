@@ -209,18 +209,18 @@ UnityEngine::Mesh* BuildBladeMesh(const BladeConfig& blade, const Color& tint, f
 UnityEngine::GameObject* CreateMeshObject(const std::string& name, UnityEngine::Transform* parent,
                                           UnityEngine::Mesh* mesh, UnityEngine::Material* material) {
     auto* object = UnityEngine::GameObject::New_ctor(StringW(name));
-    auto* transform = object->get_transform();
+    UnityEngine::Transform* transform = object->get_transform();
     if (parent) transform->set_parent(parent);
     transform->set_localPosition(UnityEngine::Vector3{0.0f, 0.0f, 0.0f});
     transform->set_localRotation(UnityEngine::Quaternion::get_identity());
     transform->set_localScale(UnityEngine::Vector3{1.0f, 1.0f, 1.0f});
 
     if (mesh) {
-        auto* filter = object->AddComponent<UnityEngine::MeshFilter*>();
+        UnityEngine::MeshFilter* filter = object->AddComponent<UnityEngine::MeshFilter*>();
         filter->set_mesh(mesh);
     }
     if (material) {
-        auto* renderer = object->AddComponent<UnityEngine::MeshRenderer*>();
+        UnityEngine::MeshRenderer* renderer = object->AddComponent<UnityEngine::MeshRenderer*>();
         renderer->set_sharedMaterial(material);
     }
     return object;
@@ -240,9 +240,9 @@ UnityEngine::Material* FindSaberMaterial(UnityEngine::Transform* parent, bool tr
     UnityEngine::MeshRenderer* fallbackRenderer = nullptr;
 
     auto renderers = parent->GetComponentsInChildren<UnityEngine::MeshRenderer*>(true);
-    for (auto* renderer : renderers) {
+    for (UnityEngine::MeshRenderer* renderer : renderers) {
         if (!renderer) continue;
-        auto* material = renderer->get_sharedMaterial();
+        UnityEngine::Material* material = renderer->get_sharedMaterial();
         if (!material) material = renderer->get_material();
         if (!material) continue;
 

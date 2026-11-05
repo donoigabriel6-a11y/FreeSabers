@@ -114,8 +114,8 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
     }
 
     UnityEngine::Vector3 cameraRight{1.0f, 0.0f, 0.0f};
-    if (auto* camera = UnityEngine::Camera::get_main()) {
-        if (auto* transform = camera->get_transform()) cameraRight = transform->get_right();
+    if (UnityEngine::Camera* camera = UnityEngine::Camera::get_main()) {
+        if (UnityEngine::Transform* transform = camera->get_transform()) cameraRight = transform->get_right();
     }
 
     const float speedBoost = 1.0f + std::max(speed, 0.0f) * config.speedWidth;

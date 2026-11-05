@@ -59,7 +59,7 @@ void InstallUIHooks() {
     BSML::Init();
     BSML::Register::RegisterSettingsMenu("FreeSabers",
         [](HMUI::ViewController* self, bool first, bool, bool) {
-            auto* transform = self->get_transform();
+            UnityEngine::Transform* transform = self->get_transform();
 
             // Rebuild the page every activation so the preset list stays current.
             if (!first) {
@@ -68,7 +68,7 @@ void InstallUIHooks() {
                 }
             }
 
-            auto* parent = BSML::Lite::CreateScrollableSettingsContainer(transform)->get_transform();
+            UnityEngine::Transform* parent = BSML::Lite::CreateScrollableSettingsContainer(transform)->get_transform();
             auto* status = BSML::Lite::CreateText(parent, "", 2.6f);
             auto refresh = [status]() {
                 status->set_text(StringW(BuildStatusText()));
