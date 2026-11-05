@@ -188,11 +188,12 @@ void SaberManager::HideVanillaModel(Instance& instance) {
     instance.vanillaTrailObjects.clear();
     if (!instance.hasTrails) return;
 
+    UnityEngine::GameObject* parentObject = instance.parent->get_gameObject();
     auto trails = instance.parent->GetComponentsInChildren<GlobalNamespace::SaberTrail*>(true);
     for (GlobalNamespace::SaberTrail* trail : trails) {
         if (!trail) continue;
         UnityEngine::GameObject* object = trail->get_gameObject();
-        if (!object || object == instance.parent->get_gameObject()) continue;
+        if (!object || object == parentObject) continue;
         instance.vanillaTrailObjects.push_back(object);
         object->SetActive(false);
     }

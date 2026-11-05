@@ -1,6 +1,7 @@
 #include "utils/VisualHelpers.hpp"
 
 #include "beatsaber-hook/shared/utils/typedefs.h"
+#include "UnityEngine/MeshFilter.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -290,7 +291,7 @@ void SetIntIfPresent(UnityEngine::Material* material, const char* property, int 
 bool IsAlive(UnityEngine::Object* object) {
     if (!object) return false;
     // m_CachedPtr is the native pointer; it is nulled when Unity destroys the object.
-    return static_cast<void*>(object->__cordl_internal_get_m_CachedPtr()) != nullptr;
+    return object->__cordl_internal_get_m_CachedPtr().m_value.convert() != nullptr;
 }
 
 void SafeDestroy(UnityEngine::Object* object) {
