@@ -2,9 +2,8 @@
 
 #include "config/SaberConfig.hpp"
 #include <string>
+#include <utility>
 #include <vector>
-#include <filesystem>
-#include <memory>
 
 namespace FreeSabers {
 
@@ -12,40 +11,50 @@ class Config {
 public:
     static Config& GetInstance();
 
-    // Initialize with mod info (call from setup)
     void Initialize(const std::string& modDataPath);
 
-    // Load all presets from the presets directory
-    void LoadPresets();
+    // Directories
+    const std::string& GetPresetDirectory() const { return presetDir; }
+    const std::string& GetImportDirectory() const { return importDir; }
 
-    // Save a preset to file
-    bool SavePreset(const FreeSaberConfig& preset, const std::string& fileName);
-
-    // Delete a preset file
-    bool DeletePreset(const std::string& fileName);
-
-    // Get all loaded presets
+    // Presets
     const std::vector<FreeSaberConfig>& GetPresets() const { return presets; }
-
-    // Get preset by name
     const FreeSaberConfig* GetPreset(const std::string& name) const;
-
-    // Get current active preset for left/right saber
     const FreeSaberConfig* GetActiveLeftPreset() const;
     const FreeSaberConfig* GetActiveRightPreset() const;
 
-    // Set active preset
-    void SetActiveLeftPreset(const std::string& presetName);
-    void SetActiveRightPreset(const std::string& presetName);
+    const std::string& GetActiveLeftName() const { return activeLeftPreset; }
+    const std::string& GetActiveRightName() const { return activeRightPreset; }
 
-    // Get preset directory path
-    const std::string& GetPresetDirectory() const { return presetDir; }
+    int GetPresetIndex(const std::string& name) const;
+    bool SetActiveLeftPreset(const std::string& presetName);
+    bool SetActiveRightPreset(const std::string& presetName);
 
-    // Create default preset if none exist
-    void CreateDefaultPreset();
-
-    // Reload all presets from disk
+    // Re-imports .reesaber files, reloads presets and fixes active names.
     void ReloadPresets();
+
+    // Converts every .reesaber/.json preset found in the ReeSabers and Presets
+    // folders into .freesaber files. Returns the number of imported presets.
+    int ImportReeSabersFiles(bool overwrite = false);
+
+    // Saves a copy of the active left preset using the next free name.
+    bool SaveActivePresetCopy();
+
+    int GetLastImportCount() const { return lastImportCount; }
+    const std::string& GetLastImportStatus() const { return lastImportStatus; }
+
+    // Global effect toggles
+    bool IsEnabled() const { return enabled; }
+    void SetEnabled(bool value);
+
+    bool AreTrailsEnabled() const { return trailsEnabled; }
+    void SetTrailsEnabled(bool value);
+
+    bool AreSparksEnabled() const { return sparksEnabled; }
+    void SetSparksEnabled(bool value);
+
+    bool IsGlowEnabled() const { return glowEnabled; }
+    void SetGlowEnabled(bool value);
 
 private:
     Config() = default;
@@ -55,13 +64,38 @@ private:
 
     std::string modDataPath;
     std::string presetDir;
+    std::string importDir;
+    std::string settingsPath;
+    std::string importLogPath;
+
     std::vector<FreeSaberConfig> presets;
+    std::vector<std::pair<std::string, std::string>> importLog;
+
     std::string activeLeftPreset = "Default";
     std::string activeRightPreset = "Default";
 
-    void LoadActivePresets();
-    void SaveActivePresets();
-    std::string GetActivePresetsFile() const;
+    bool enabled = true;
+    bool trailsEnabled = true;
+    bool sparksEnabled = true;
+    bool glowEnabled = true;
+
+    int lastImportCount = 0;
+    std::string lastImportStatus;
+
+    bool LoadPresets();
+    void CreateDefaultPreset();
+    void EnsureActivePresets();
+
+    void LoadSettings();
+    void SaveSettings();
+
+    void LoadImportLog();
+    void SaveImportLog();
+    std::string ImportedNameFor(const std::string& sourcePath) const;
+    bool ImportFile(const std::string& sourcePath, bool overwrite, std::string& outName);
+
+    std::string UniquePresetName(const std::string& desired) const;
+    static std::string SanitizeFileName(const std::string& desired);
 };
 
 } // namespace FreeSabers

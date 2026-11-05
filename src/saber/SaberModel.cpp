@@ -1,40 +1,121 @@
 #include "saber/SaberModel.hpp"
-#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
+#include "utils/VisualHelpers.hpp"
 #include "main.hpp"
 
 namespace FreeSabers {
 
-void SaberModel::Initialize(void* saberController, const LayerConfig& layer, bool isLeft) {
-    this->controller = saberController;
-    this->layerConfig = layer;
-    this->isLeft = isLeft;
+bool SaberModel::Initialize(UnityEngine::Transform* parent, const BladeConfig& blade, const TransformOffset& offset,
+                            const Color& tint, UnityEngine::Material* templateMaterial) {
+    if (!parent || !blade.enabled || !templateMaterial) return false;
+
+    config = blade;
+    mesh = Visuals::BuildBladeMesh(config, tint, 1.0f, false);
+    if (!mesh) return false;
+
+    material = Visuals::CloneMaterial(templateMaterial);
+    if (!material) {
+        Visuals::SafeDestroy(mesh);
+        mesh = nullptr;
+        return false;
+    }
+
+    ApplyMaterial(tint);
+    material->set_renderQueue(config.renderQueue);
+    Visuals::SetIntIfPresent(material, "_Cull", config.cullMode);
+    Visuals::SetIntIfPresent(material, "_ZWrite", config.depthWrite ? 1 : 0);
+
+    root = Visuals::CreateMeshObject("FreeSabersBlade", parent, mesh, material);
+    if (!root) {
+        Visuals::SafeDestroy(material);
+        Visuals::SafeDestroy(mesh);
+        material = nullptr;
+        mesh = nullptr;
+        return false;
+    }
+
+    Visuals::ApplyTransform(root->get_transform(), offset);
+    renderer = root->GetComponent<UnityEngine::MeshRenderer*>();
+    if (renderer) renderer->set_sortingOrder(config.renderQueue);
 
     initialized = true;
-    PaperLogger.info("SaberModel initialized for %s saber", isLeft ? "Left" : "Right");
+    time = 0.0f;
+    PaperLogger.info("FreeSabers: blade built (radius %.4f, %d profile keys)",
+                     config.radius, static_cast<int>(config.profile.points.size()));
+    return true;
 }
 
-void SaberModel::Update(float deltaTime) {
-    if (!initialized) return;
+void SaberModel::ApplyMaterial(const Color& tint) {
+    if (!material) return;
+
+    // The material tint is the fallback for shaders that ignore vertex colours.
+    Color displayColor = config.colorOverValue.Empty() ? config.baseColor : config.SampleColor(0.5f);
+    Color emissionColor = config.emissionColor;
+
+    if (config.colorOverride.force) {
+        displayColor = tint;
+        emissionColor = tint;
+    }
+
+    Visuals::SetColorIfPresent(material, "_Color", Visuals::ToUnity(displayColor));
+    Visuals::SetColorIfPresent(material, "_BaseColor", Visuals::ToUnity(displayColor));
+    Visuals::SetColorIfPresent(material, "_EmissionColor", Visuals::ToUnity(emissionColor.MultiplyRGB(config.emissionIntensity)));
+    Visuals::SetFloatIfPresent(material, "_EmissionIntensity", config.emissionIntensity);
+    Visuals::SetFloatIfPresent(material, "_GlowIntensity", config.emissionIntensity * config.glowMultiplier);
+    Visuals::SetFloatIfPresent(material, "_FresnelPower", config.fresnelPower);
+    Visuals::SetFloatIfPresent(material, "_Fresnel", config.fresnelPower);
+    Visuals::SetFloatIfPresent(material, "_Metallic", config.metallic);
+    Visuals::SetFloatIfPresent(material, "_Glossiness", 1.0f - config.roughness);
+    Visuals::SetFloatIfPresent(material, "_Roughness", config.roughness);
+    Visuals::SetFloatIfPresent(material, "_EnvLightIntensity", config.envLightIntensity);
+    Visuals::SetFloatIfPresent(material, "_ReflectionIntensity", config.reflectionIntensity);
+    Visuals::SetFloatIfPresent(material, "_NormalMapIntensity", config.normalMapIntensity);
+    Visuals::SetFloatIfPresent(material, "_BlurFrames", config.blurFrames);
+    Visuals::SetFloatIfPresent(material, "_BlurSensitivity", config.blurSensitivity);
+    Visuals::SetFloatIfPresent(material, "_GlowMultiplier", config.glowMultiplier);
+    Visuals::SetColorIfPresent(material, "_ReflectionColor", Visuals::ToUnity(config.reflectionColor));
+    Visuals::SetColorIfPresent(material, "_EnvLightColor", Visuals::ToUnity(config.envLightColor));
+    Visuals::SetColorIfPresent(material, "_HandleColor", Visuals::ToUnity(config.handleColor));
+    Visuals::SetFloatIfPresent(material, "_HandleRoughness", config.handleRoughness);
 }
 
-void SaberModel::SetMaterialProperty(const std::string& property, const Vector3& value) {
-    // Disabled for now
+void SaberModel::Update(float deltaTime, const Color& tint) {
+    if (!initialized || !material) return;
+    time += deltaTime;
+
+    if (config.colorOverride.force) {
+        const Color animated = config.colorOverride.Evaluate(time);
+        Visuals::SetColorIfPresent(material, "_Color", Visuals::ToUnity(animated));
+        Visuals::SetColorIfPresent(material, "_EmissionColor",
+                                   Visuals::ToUnity(animated.MultiplyRGB(config.emissionIntensity)));
+    } else {
+        // Keep the material in sync if the caller supplied a different tint.
+        (void)tint;
+    }
+
+    if (config.useTexture && material->HasProperty(StringW("_MainTex"))) {
+        material->set_mainTextureScale(Visuals::ToUnity(config.tiling));
+        material->set_mainTextureOffset(Visuals::ToUnity(config.uvScroll));
+    }
 }
 
-void SaberModel::SetMaterialProperty(const std::string& property, float value) {
-    // Disabled for now
+UnityEngine::Vector3 SaberModel::GetPoint(float z) const {
+    if (!root) return UnityEngine::Vector3{0.0f, 0.0f, z};
+    return root->get_transform()->TransformPoint(UnityEngine::Vector3{0.0f, 0.0f, z});
 }
 
-void SaberModel::SetMaterialProperty(const std::string& property, const Color& value) {
-    // Disabled for now
+void SaberModel::SetVisible(bool visible) {
+    if (Visuals::IsAlive(root)) root->SetActive(visible);
 }
 
-void SaberModel::ApplyMaterial(const LayerConfig& layer) {
-    // Disabled for now
-}
-
-void SaberModel::LoadCustomModel(const std::string& path) {
-    PaperLogger.info("Custom model loading not yet implemented: %s", path.c_str());
+void SaberModel::Dispose() {
+    if (Visuals::IsAlive(root)) UnityEngine::Object::Destroy(root);
+    root = nullptr;
+    renderer = nullptr;
+    Visuals::SafeDestroy(material);
+    Visuals::SafeDestroy(mesh);
+    material = nullptr;
+    mesh = nullptr;
+    initialized = false;
 }
 
 } // namespace FreeSabers

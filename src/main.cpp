@@ -45,12 +45,3 @@ MOD_EXTERN_FUNC void late_load() noexcept {
 
     PaperLogger.info("FreeSabers initialized successfully!");
 }
-
-MOD_EXTERN_FUNC void on_game_scene_loaded(int scene) noexcept {
-    PaperLogger.info("Game scene loaded: %d", scene);
-    FreeSabers::SaberManager::GetInstance().ReloadPresets();
-}
-
-MOD_EXTERN_FUNC void on_game_scene_unloaded(int scene) noexcept {
-    PaperLogger.info("Game scene unloaded: %d", scene);
-}

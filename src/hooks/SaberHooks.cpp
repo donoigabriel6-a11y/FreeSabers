@@ -1,65 +1,72 @@
 #include "hooks/SaberHooks.hpp"
 #include "saber/SaberManager.hpp"
-#include "config/Config.hpp"
-#include "beatsaber-hook/shared/utils/il2cpp-utils.hpp"
-#include "beatsaber-hook/shared/utils/hooking.hpp"
-#include "beatsaber-hook/shared/utils/logging.hpp"
 #include "main.hpp"
 
-using namespace FreeSabers;
+#include "GlobalNamespace/SaberModelController.hpp"
+#include "GlobalNamespace/Saber.hpp"
+#include "GlobalNamespace/SaberType.hpp"
+#include "GlobalNamespace/ScoreController.hpp"
+#include "GlobalNamespace/NoteController.hpp"
+#include "GlobalNamespace/NoteCutInfo.hpp"
+#include "GlobalNamespace/ColorManager.hpp"
+#include "GlobalNamespace/GameplayCoreInstaller.hpp"
+#include "GlobalNamespace/AudioTimeSyncController.hpp"
+#include "UnityEngine/Color.hpp"
+#include "UnityEngine/Transform.hpp"
 
 namespace FreeSabers::Hooks {
 
-// Hook storage (will be initialized at runtime)
-static const MethodInfo* SaberModelController_Update_Method = nullptr;
-static const MethodInfo* SaberMeshRenderer_OnWillRenderObject_Method = nullptr;
-static const MethodInfo* SaberTrail_Update_Method = nullptr;
-static const MethodInfo* Saber_ManualUpdate_Method = nullptr;
-static const MethodInfo* NoteController_NoteCut_Method = nullptr;
-static const MethodInfo* GameplayCoreSceneSetupData_Init_Method = nullptr;
+MAKE_HOOK_MATCH(SaberModelController_Init, &GlobalNamespace::SaberModelController::Init, void,
+                GlobalNamespace::SaberModelController* self, UnityEngine::Transform* parent,
+                GlobalNamespace::Saber* saber, UnityEngine::Color tint) {
+    SaberModelController_Init(self, parent, saber, tint);
+    SaberManager::GetInstance().OnSaberModelInit(self, parent, saber, tint);
+}
 
-void InitializeHookMethods() {
-    // Find IL2CPP methods at runtime
-    SaberModelController_Update_Method = il2cpp_utils::FindMethodUnsafe("", "SaberModelController", "Update", 0);
-    SaberMeshRenderer_OnWillRenderObject_Method = il2cpp_utils::FindMethodUnsafe("", "SaberMeshRenderer", "OnWillRenderObject", 0);
-    SaberTrail_Update_Method = il2cpp_utils::FindMethodUnsafe("", "SaberTrail", "Update", 0);
-    Saber_ManualUpdate_Method = il2cpp_utils::FindMethodUnsafe("", "Saber", "ManualUpdate", 0);
-    NoteController_NoteCut_Method = il2cpp_utils::FindMethodUnsafe("", "NoteController", "NoteCut", 4);
-    GameplayCoreSceneSetupData_Init_Method = il2cpp_utils::FindMethodUnsafe("", "GameplayCoreSceneSetupData", "Init", 0);
+MAKE_HOOK_MATCH(ScoreController_HandleNoteWasCut, &GlobalNamespace::ScoreController::HandleNoteWasCut, void,
+                GlobalNamespace::ScoreController* self, GlobalNamespace::NoteController* noteController,
+                ByRef<GlobalNamespace::NoteCutInfo> noteCutInfo) {
+    ScoreController_HandleNoteWasCut(self, noteController, noteCutInfo);
+    (void)noteController;
+    SaberManager::GetInstance().OnNoteCut(noteCutInfo->saberType, 1.0f);
+}
+
+MAKE_HOOK_MATCH(GameplayCoreInstaller_InstallBindings, &GlobalNamespace::GameplayCoreInstaller::InstallBindings, void,
+                GlobalNamespace::GameplayCoreInstaller* self) {
+    // Clear the previous level before the scene creates its saber models.
+    SaberManager::GetInstance().OnLevelStart();
+    GameplayCoreInstaller_InstallBindings(self);
+}
+
+MAKE_HOOK_MATCH(AudioTimeSyncController_OnDestroy, &GlobalNamespace::AudioTimeSyncController::OnDestroy, void,
+                GlobalNamespace::AudioTimeSyncController* self) {
+    SaberManager::GetInstance().OnLevelEnd();
+    AudioTimeSyncController_OnDestroy(self);
+}
+
+MAKE_HOOK_MATCH(ColorManager_ColorForSaberType, &GlobalNamespace::ColorManager::ColorForSaberType,
+                UnityEngine::Color, GlobalNamespace::ColorManager* self, GlobalNamespace::SaberType saberType) {
+    if (auto color = SaberManager::GetInstance().GetGameplayColor(saberType)) return *color;
+    return ColorManager_ColorForSaberType(self, saberType);
+}
+
+MAKE_HOOK_MATCH(ColorManager_EffectsColorForSaberType, &GlobalNamespace::ColorManager::EffectsColorForSaberType,
+                UnityEngine::Color, GlobalNamespace::ColorManager* self, GlobalNamespace::SaberType saberType) {
+    if (auto color = SaberManager::GetInstance().GetGameplayColor(saberType)) return *color;
+    return ColorManager_EffectsColorForSaberType(self, saberType);
 }
 
 void InstallSaberHooks() {
-    PaperLogger.info("Installing saber hooks...");
+    PaperLogger.info("FreeSabers: installing hooks");
 
-    InitializeHookMethods();
+    INSTALL_HOOK(PaperLogger, SaberModelController_Init);
+    INSTALL_HOOK(PaperLogger, ScoreController_HandleNoteWasCut);
+    INSTALL_HOOK(PaperLogger, GameplayCoreInstaller_InstallBindings);
+    INSTALL_HOOK(PaperLogger, AudioTimeSyncController_OnDestroy);
+    INSTALL_HOOK(PaperLogger, ColorManager_ColorForSaberType);
+    INSTALL_HOOK(PaperLogger, ColorManager_EffectsColorForSaberType);
 
-    // Install hooks using beatsaber-hook's hooking API
-    // Note: Full hook implementation requires proper MAKE_HOOK macros
-    // For now, we log that hooks would be installed
-    PaperLogger.info("Saber hook methods found: %s",
-        SaberModelController_Update_Method ? "yes" : "no");
-    PaperLogger.info("NoteController hook method found: %s",
-        NoteController_NoteCut_Method ? "yes" : "no");
-    PaperLogger.info("GameplayCoreSceneSetupData hook method found: %s",
-        GameplayCoreSceneSetupData_Init_Method ? "yes" : "no");
-
-    // TODO: Implement proper MAKE_HOOK_OFFSETLESS hooks once method signatures are verified
-    PaperLogger.info("Hook installation deferred - will implement after verifying method signatures");
-}
-
-void* GetSaberModelController(bool isLeft) {
-    // Find SaberManager and get the appropriate controller
-    return nullptr;
-}
-
-void* GetSaberMeshRenderer(void* saberController) {
-    // Disabled for now - would use il2cpp_utils::RunMethod with proper type handling
-    return nullptr;
-}
-
-void* GetSaberTrail(void* saberController) {
-    // Disabled for now
-    return nullptr;
+    PaperLogger.info("FreeSabers: hooks installed");
 }
 
 } // namespace FreeSabers::Hooks

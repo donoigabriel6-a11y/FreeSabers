@@ -1,38 +1,27 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/stringbuffer.h>
 
 namespace FreeSabers {
 
-// Forward declarations
-struct ColorGradient;
-struct TrailConfig;
-struct GlowConfig;
-struct SparkConfig;
-struct DynamicJointConfig;
-struct MaterialDriver;
-struct LayerConfig;
-struct SaberPreset;
-struct FreeSaberConfig;
+// ============================================================================
+// Basic value types
+// ============================================================================
 
-// ============================================================================
-// Basic Types
-// ============================================================================
+struct Vec2 {
+    float x = 0.0f, y = 0.0f;
+
+    Vec2() = default;
+    Vec2(float x_, float y_) : x(x_), y(y_) {}
+};
 
 struct Vector3 {
     float x = 0.0f, y = 0.0f, z = 0.0f;
 
     Vector3() = default;
     Vector3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
 };
 
 struct Color {
@@ -41,224 +30,333 @@ struct Color {
     Color() = default;
     Color(float r_, float g_, float b_, float a_ = 1.0f) : r(r_), g(g_), b(b_), a(a_) {}
 
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
-};
-
-struct ColorGradient {
-    std::vector<std::pair<float, Color>> keys; // time (0-1), color
-
-    ColorGradient() = default;
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
-
-    Color Evaluate(float t) const;
+    static Color Lerp(const Color& from, const Color& to, float t);
+    static Color FromHSV(float h, float s, float v, float a = 1.0f);
+    Color WithAlpha(float newAlpha) const { return Color(r, g, b, newAlpha); }
+    Color MultiplyRGB(float scale) const { return Color(r * scale, g * scale, b * scale, a); }
 };
 
 // ============================================================================
-// Effect Configurations
+// Curves and gradients
+// ============================================================================
+
+// Interpolation values match the ReeSabers editor:
+// 0 = Ease, 1 = Linear, 2 = Constant, 3 = Smooth.
+struct CurvePoint {
+    float time = 0.0f;
+    float value = 0.0f;
+};
+
+struct Curve {
+    int interpolationType = 1;
+    std::vector<CurvePoint> points;
+    float valueFrom = 0.0f;
+    float valueTo = 1.0f;
+
+    bool Empty() const { return points.empty(); }
+    float Evaluate(float t) const;
+    // Evaluates an external driver value mapped through valueFrom..valueTo.
+    float EvaluateDriver(float raw) const;
+};
+
+struct GradientPoint {
+    float time = 0.0f;
+    Color value = Color();
+};
+
+struct ColorCurve {
+    int interpolationType = 1;
+    std::vector<GradientPoint> points;
+    float valueFrom = 0.0f;
+    float valueTo = 1.0f;
+
+    bool Empty() const { return points.empty(); }
+    Color Evaluate(float t) const;
+    Color EvaluateDriver(float raw) const;
+};
+
+struct TransformOffset {
+    Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+    Vector3 rotation = Vector3(0.0f, 0.0f, 0.0f); // euler degrees
+    Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
+
+    bool IsIdentity() const;
+};
+
+// ============================================================================
+// Colouring
+// ============================================================================
+
+// ReeSabers colour override / hue driver settings.
+struct ColorOverride {
+    bool force = false;
+    int type = 0;
+    float hue = 0.0f;               // 0..1
+    float saturation = 1.0f;
+    float value = 1.0f;
+    float hueShiftPerSecond = 0.0f;
+    float fakeGlowMultiplier = 1.0f;
+    int colorSource = 0;
+
+    // time in seconds since the saber was created.
+    Color Evaluate(float time) const;
+};
+
+// ============================================================================
+// Blade
+// ============================================================================
+
+struct BladeConfig {
+    bool enabled = true;
+
+    // Geometry (saber local space, blade runs along +Z).
+    float zOffsetFrom = -0.17f;
+    float zOffsetTo = 1.0f;
+    float radius = 0.0132f;
+    float stretchBias = 4.0f;
+    Curve profile;                  // relative radius along the blade (0..1)
+    bool startCap = true;
+    bool endCap = true;
+    int verticalResolution = 20;
+    int horizontalResolution = 10;
+
+    // Colours / material.
+    Color baseColor = Color(0.0f, 0.8f, 1.0f, 1.0f);
+    Color emissionColor = Color(0.0f, 0.8f, 1.0f, 1.0f);
+    float emissionIntensity = 2.0f;
+    Color reflectionColor = Color(0.05f, 0.005f, 0.005f, 0.0f);
+    Color envLightColor = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    float fresnelPower = 5.0f;
+    float metallic = 0.0f;
+    float roughness = 0.43f;
+    float envLightIntensity = 1.0f;
+    float reflectionIntensity = 1.0f;
+    float normalMapIntensity = 1.0f;
+    bool sceneReflections = false;
+    bool sceneLights = false;
+    float glowMultiplier = 1.0f;
+    Color handleColor = Color(0.1f, 0.1f, 0.1f, 0.0f);
+    float handleRoughness = 2.0f;
+    int renderQueue = 3002;
+    int cullMode = 0;               // 0 = off, 1 = front, 2 = back
+    bool depthWrite = false;
+
+    // Motion blur (blur-frames are converted to a trail duration in the renderer).
+    float blurFrames = 2.0f;
+    float blurSensitivity = 0.6f;
+
+    // ReeSabers "mask" mappings sampled along the blade.
+    ColorCurve colorOverValue;
+    Curve alphaOverValue;
+    Curve scaleOverValue;
+    float valueFrom = 0.0f;
+    float valueTo = 1.0f;
+    Curve handleMask;
+    int bladeMaskResolution = 48;
+
+    // Textures (tiling / scrolling only; custom textures are not imported).
+    Vec2 tiling = Vec2(1.0f, 1.0f);
+    Vec2 uvScroll = Vec2(0.0f, 0.0f);
+    bool useTexture = false;
+    std::string texturePath;
+
+    ColorOverride colorOverride;
+
+    Color SampleColor(float t) const;
+    float SampleAlpha(float t) const;
+    float SampleScale(float t) const;
+};
+
+// ============================================================================
+// Trail
 // ============================================================================
 
 struct TrailConfig {
     bool enabled = true;
-    float width = 0.1f;
-    float length = 2.0f;
-    float lifetime = 0.5f;
-    ColorGradient colorGradient;
-    std::string texturePath;
+    std::string name = "Trail";
+
+    // 0 = tip trail (billboard ribbon), 1 = blade trail (ribbon between both
+    // blade edges, like the vanilla saber trail).
+    int trailType = 1;
+    float length = 0.22f;           // seconds of motion kept in the trail
+    float width = 0.02f;            // metres (tip trails)
+    float offset = 1.0f;            // position along the blade (1 = tip)
+    float distortionMultiplier = 1.0f;
+    int horizontalResolution = 4;
+    int verticalResolution = 80;
+    int blendingMode = 0;
+    bool alwaysOnTop = false;
+    int renderQueue = 3000;
+    float minVertexDistance = 0.004f;
+
+    ColorCurve colorOverAge;
+    Curve alphaOverAge;
+    Curve widthOverAge;
+
+    // Extra motion-blur strength driven by blade speed.
+    float speedWidth = 0.0f;
+    float speedAlpha = 0.25f;
+    float blurFrames = 0.0f;
+
     bool useTexture = false;
-    int textureMode = 0; // 0 = stretch, 1 = tile, 2 = static
+    std::string texturePath;
+    Vec2 tiling = Vec2(1.0f, 1.0f);
+    Vec2 uvScroll = Vec2(0.0f, 0.0f);
 
-    TrailConfig() = default;
+    TransformOffset transform;
+    std::vector<struct MaterialDriver> drivers;
 
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
+    bool IsTipTrail() const { return trailType == 0; }
 };
+
+// ============================================================================
+// Glow
+// ============================================================================
 
 struct GlowConfig {
     bool enabled = true;
-    float intensity = 1.0f;
-    float radius = 0.5f;
-    Color color = Color(1.0f, 1.0f, 1.0f, 1.0f);
-    ColorGradient pulseGradient;
+    float intensity = 1.5f;
+    float radius = 0.4f;            // extra shell radius multiplier
+    Color color = Color(0.0f, 0.8f, 1.0f, 1.0f);
+    ColorCurve pulseGradient;
     bool pulseEnabled = false;
     float pulseSpeed = 1.0f;
-    std::string bloomTexturePath;
-
-    GlowConfig() = default;
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
+    float pulseAmount = 0.35f;
+    bool useLight = false;          // optional real Unity light (Quest: keep off)
+    float lightRange = 2.0f;
 };
+
+// ============================================================================
+// Sparks (cut particles)
+// ============================================================================
 
 struct SparkConfig {
     bool enabled = true;
-    int count = 10;
-    float size = 0.05f;
-    float lifetime = 0.3f;
-    float velocity = 2.0f;
-    float spread = 45.0f; // degrees
-    ColorGradient colorGradient;
+    int count = 96;                 // live particle budget (hard capped at runtime)
+    float size = 0.03f;
+    float minLifetime = 0.1f;
+    float maxLifetime = 0.5f;
+    float velocity = 1.5f;
+    float spread = 35.0f;           // degrees
+    float trailLength = 0.15f;
+    float trailWidth = 0.05f;
+    float gravityY = 0.0f;
+    float damping = 1.5f;
+    float turbulencePower = 0.0f;
+    float turbulenceScale = 4.0f;
+    int emissionMode = 1;           // 0 = cut, 1 = cut burst, 2 = continuous while swinging
+    float triggerPercentage = 0.7f;
+    float triggerPeriod = 0.05f;
+    float burstSpread = 0.8f;
+
+    Color color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    ColorCurve colorOverLifetime;
+    Curve alphaOverLifetime;
+    Curve scaleOverLifetime;
+
+    TransformOffset transform;
+
+    bool useTexture = false;
     std::string texturePath;
-    bool useCustomTexture = false;
-    int emissionMode = 0; // 0 = on cut, 1 = continuous, 2 = on swing
-
-    SparkConfig() = default;
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
-};
-
-struct DynamicJointConfig {
-    bool enabled = true;
-    int jointCount = 5;
-    float stiffness = 0.5f;
-    float damping = 0.1f;
-    float mass = 0.1f;
-    float gravity = -9.81f;
-    float maxAngle = 45.0f; // degrees
-    Vector3 localAxis = Vector3(0, 1, 0);
-    bool affectBlade = true;
-    bool affectHilt = false;
-
-    DynamicJointConfig() = default;
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
 };
 
 // ============================================================================
-// Material Driver System
+// Dynamic joints ("bolts" hanging from the blade)
 // ============================================================================
 
-enum class DriverType {
-    Score,
-    Combo,
-    SwingSpeed,
-    AudioBass,
-    AudioMid,
-    AudioTreble,
-    Time,
-    Energy,
-    Accuracy,
-    Custom
+struct BoltsConfig {
+    bool enabled = false;
+    int joints = 4;
+    float spacing = 0.06f;          // metres between joints
+    float size = 0.02f;             // joint radius
+    float stiffness = 60.0f;
+    float damping = 8.0f;
+    float gravityY = -1.5f;
+    Color color = Color(1.0f, 1.0f, 1.0f, 1.0f);
+};
+
+// ============================================================================
+// Drivers
+// ============================================================================
+
+// Driver types follow the ReeSabers valueType enum.
+enum class DriverType : int {
+    None = 0,
+    TipVelocity = 1,
+    SwingsPerSecond = 2,
+    TimeDependence = 3,
+    TipAcceleration = 4,
+    AngularVelocity = 5,
+    ScorePercentage = 6,
+    Combo = 7,
+    Misses = 8,
+    Energy = 9,
+    Multiplier = 10,
+    CutScore = 11,
+    Accuracy = 12,
+    PreCutScore = 13,
+    PostCutScore = 14,
+    CutsPerSecond = 15,
+    TimeAfterCut = 16,
+    DirectionX = 17,
+    DirectionY = 18,
+    DirectionZ = 19
 };
 
 struct MaterialDriver {
     std::string name;
-    DriverType type = DriverType::Score;
-    std::string targetProperty; // e.g., "_EmissionColor", "_GlowIntensity", "_TrailWidth"
-    float minValue = 0.0f;
-    float maxValue = 1.0f;
-    float multiplier = 1.0f;
-    float offset = 0.0f;
-    bool useGradient = false;
-    ColorGradient gradient;
-    int materialIndex = 0; // which material on the saber
-    std::string shaderKeyword; // for enabling/disabling features
+    int valueType = 0;
+    float increaseResistance = 0.0f;
+    float decreaseResistance = 0.0f;
+    Curve valueOverValue;
+    ColorCurve colorOverValue;
+    float valueFrom = 0.0f;
+    float valueTo = 1.0f;
 
-    MaterialDriver() = default;
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
-
-    float Evaluate(float inputValue) const;
+    float EvaluateValue(float raw) const;
+    Color EvaluateColor(float raw) const;
 };
 
 // ============================================================================
-// Layer Configuration (for stacking multiple effects)
-// ============================================================================
-
-enum class LayerType {
-    Blade,
-    Trail,
-    Glow,
-    Sparks,
-    DynamicJoints,
-    Hilt,
-    Custom
-};
-
-struct LayerConfig {
-    std::string name;
-    LayerType type = LayerType::Blade;
-    bool enabled = true;
-    int order = 0; // rendering order
-
-    // Model/Mesh
-    std::string modelPath; // .obj, .whacker, or built-in
-    Vector3 scale = Vector3(1, 1, 1);
-    Vector3 positionOffset = Vector3(0, 0, 0);
-    Vector3 rotationOffset = Vector3(0, 0, 0);
-
-    // Material
-    std::string materialPath; // .mat or built-in
-    Color baseColor = Color(1, 1, 1, 1);
-    Color emissionColor = Color(0, 0, 0, 0);
-    float emissionIntensity = 0.0f;
-    float smoothness = 0.5f;
-    float metallic = 0.0f;
-
-    // Effects (only used based on layer type)
-    TrailConfig trail;
-    GlowConfig glow;
-    SparkConfig sparks;
-    DynamicJointConfig dynamicJoints;
-
-    // Drivers
-    std::vector<MaterialDriver> drivers;
-
-    LayerConfig() = default;
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
-};
-
-// ============================================================================
-// Saber Preset (Left/Right configuration)
+// Preset / config
 // ============================================================================
 
 struct SaberPreset {
     std::string id;
-    std::string name;
-    std::string author;
+    std::string name = "Saber";
+    std::string author = "Unknown";
     std::string description;
-    int version = 1;
+    int version = 2;
 
-    std::vector<LayerConfig> layers;
-    std::vector<MaterialDriver> globalDrivers;
+    TransformOffset transform;
 
-    SaberPreset() = default;
+    BladeConfig blade;
+    std::vector<TrailConfig> trails;
+    SparkConfig sparks;
+    GlowConfig glow;
+    BoltsConfig bolts;
 
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
+    // true = keep the game's saber model and only add effects.
+    bool keepVanillaModel = false;
 
-    bool Validate(std::string& errorOut) const;
+    std::vector<MaterialDriver> drivers;
 };
 
-// ============================================================================
-// Main Config (FreeSaber file format)
-// ============================================================================
-
 struct FreeSaberConfig {
-    int formatVersion = 1;
+    int formatVersion = 2;
     std::string name = "Untitled Saber";
     std::string author = "Unknown";
-    std::string description = "";
+    std::string description;
+    std::string sourceFormat = "FreeSabers";
+    std::string sourceVersion;
     std::string createdDate;
     std::string modifiedDate;
 
+    bool useSameForBoth = true;
     SaberPreset leftSaber;
     SaberPreset rightSaber;
 
-    // Global settings
-    bool useSameForBoth = true; // if true, rightSaber mirrors leftSaber
-
     FreeSaberConfig() = default;
-
-    rapidjson::Value ToJson(rapidjson::Document::AllocatorType& allocator) const;
-    void FromJson(const rapidjson::Value& value);
 
     std::string ToJsonString(bool pretty = true) const;
     bool FromJsonString(const std::string& jsonStr);
@@ -267,6 +365,10 @@ struct FreeSaberConfig {
     static std::optional<FreeSaberConfig> LoadFromFile(const std::string& filePath);
 
     bool Validate(std::string& errorOut) const;
+
+    // Resolves the preset for a side (mirrors the left preset when
+    // useSameForBoth is true).
+    const SaberPreset& GetPreset(bool isLeft) const;
 };
 
 } // namespace FreeSabers

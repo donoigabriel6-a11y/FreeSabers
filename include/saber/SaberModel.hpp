@@ -1,8 +1,11 @@
 #pragma once
 
 #include "config/SaberConfig.hpp"
-#include <string>
-#include <vector>
+#include "UnityEngine/GameObject.hpp"
+#include "UnityEngine/Material.hpp"
+#include "UnityEngine/Mesh.hpp"
+#include "UnityEngine/MeshRenderer.hpp"
+#include "UnityEngine/Transform.hpp"
 
 namespace FreeSabers {
 
@@ -11,28 +14,28 @@ public:
     SaberModel() = default;
     ~SaberModel() = default;
 
-    void Initialize(void* saberController, const LayerConfig& layer, bool isLeft);
-    void Update(float deltaTime);
-    void SetMaterialProperty(const std::string& property, const Vector3& value);
-    void SetMaterialProperty(const std::string& property, float value);
-    void SetMaterialProperty(const std::string& property, const Color& value);
+    bool Initialize(UnityEngine::Transform* parent, const BladeConfig& blade, const TransformOffset& offset,
+                    const Color& tint, UnityEngine::Material* templateMaterial);
 
-    void* GetController() const { return controller; }
-    void* GetMeshRenderer() const { return meshRenderer; }
+    void Update(float deltaTime, const Color& tint);
+    // World-space point along the blade (local Z is transformed by the preset offset).
+    UnityEngine::Vector3 GetPoint(float z) const;
+    void SetVisible(bool visible);
+    void Dispose();
+
     bool IsInitialized() const { return initialized; }
+    const BladeConfig& GetConfig() const { return config; }
 
 private:
-    void* controller = nullptr;
-    void* meshRenderer = nullptr;
-    void* meshFilter = nullptr;
-    void* material = nullptr;
-    LayerConfig layerConfig;
-    bool isLeft = false;
+    BladeConfig config;
+    UnityEngine::GameObject* root = nullptr;
+    UnityEngine::Mesh* mesh = nullptr;
+    UnityEngine::Material* material = nullptr;
+    UnityEngine::MeshRenderer* renderer = nullptr;
     bool initialized = false;
+    float time = 0.0f;
 
-    void CreateCustomMesh(const LayerConfig& layer);
-    void ApplyMaterial(const LayerConfig& layer);
-    void LoadCustomModel(const std::string& path);
+    void ApplyMaterial(const Color& tint);
 };
 
 } // namespace FreeSabers

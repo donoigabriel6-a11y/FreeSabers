@@ -1,11 +1,11 @@
 {
   "sharedDir": "shared",
   "dependenciesDir": "extern",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "info": {
     "name": "FreeSabers",
     "id": "FreeSabers",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "url": null,
     "additionalData": {
       "overrideSoName": "libFreeSabers.so",

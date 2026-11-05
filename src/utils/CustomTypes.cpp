@@ -2,10 +2,11 @@
 #include "saber/SaberManager.hpp"
 #include "main.hpp"
 
+#include "UnityEngine/Time.hpp"
+
 using namespace FreeSabers;
 
 DEFINE_TYPE(FreeSabers, FreeSabersController);
-DEFINE_TYPE(FreeSabers, FreeSabersSettingsController);
 
 void FreeSabersController::ctor() {
     initialized = false;
@@ -17,22 +18,12 @@ void FreeSabersController::Awake() {
     initialized = true;
 }
 
+void FreeSabersController::Update() {
+    SaberManager::GetInstance().Update(UnityEngine::Time::get_deltaTime());
+}
+
 void FreeSabersController::OnDestroy() {
     PaperLogger.info("FreeSabersController OnDestroy");
+    SaberManager::GetInstance().OnLevelEnd();
     initialized = false;
-}
-
-void FreeSabersSettingsController::ctor() {
-}
-
-void FreeSabersSettingsController::Awake() {
-    PaperLogger.info("FreeSabersSettingsController Awake");
-}
-
-void FreeSabersSettingsController::OnEnable() {
-    PaperLogger.info("FreeSabersSettingsController OnEnable");
-}
-
-void FreeSabersSettingsController::OnDisable() {
-    PaperLogger.info("FreeSabersSettingsController OnDisable");
 }
