@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="FreeSabers - Open source lightsaber community project">
-    <title>FreeSabers - Open Source Lightsaber Community</title>
+    <meta name="description" content="FreeSabers - Free custom sabers for Beat Saber on Quest. Open source ReeSabers alternative.">
+    <title>FreeSabers - Custom Sabers for Beat Saber Quest</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,9 +18,13 @@
             --fg-muted: #606070;
             --accent-primary: #00ff88;
             --accent-secondary: #ff3366;
+            --accent-blue: #00aaff;
             --accent-glow: #00ff88;
             --border-color: #2a2a3a;
             --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --quest-green: #00ff88;
+            --saber-blue: #00aaff;
+            --saber-red: #ff3366;
         }
 
         @media (prefers-color-scheme: light) {
@@ -33,6 +37,7 @@
                 --fg-muted: #8a8a9a;
                 --accent-primary: #00aa66;
                 --accent-secondary: #cc2244;
+                --accent-blue: #0088cc;
                 --accent-glow: #00aa66;
                 --border-color: #e0e0ec;
                 --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
@@ -90,7 +95,7 @@
             left: -150px;
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, rgba(255, 51, 102, 0.06) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(0, 170, 255, 0.06) 0%, transparent 70%);
             pointer-events: none;
             z-index: 0;
         }
@@ -106,9 +111,12 @@
 
         /* Header */
         header {
-            padding: 32px 0;
+            padding: 24px 0;
             position: relative;
             z-index: 1;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(var(--bg-primary), 0.8);
+            backdrop-filter: blur(8px);
         }
 
         .header-content {
@@ -128,36 +136,60 @@
         }
 
         .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--accent-primary), #00cc6a);
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 32px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 24px rgba(0, 170, 255, 0.3), 0 0 24px rgba(255, 51, 102, 0.3);
+            position: relative;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            border-radius: 12px;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.5;
         }
 
         .logo-icon svg {
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             stroke: var(--bg-primary);
         }
 
         .logo-text {
             font-family: 'Orbitron', monospace;
             font-weight: 900;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             letter-spacing: -0.02em;
-            background: linear-gradient(135deg, var(--fg-primary), var(--accent-primary));
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
+        .logo-tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            background: rgba(0, 255, 136, 0.15);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
         .nav-links {
             display: flex;
-            gap: 32px;
+            gap: 28px;
             list-style: none;
         }
 
@@ -165,6 +197,7 @@
             color: var(--fg-secondary);
             text-decoration: none;
             font-weight: 500;
+            font-size: 0.9rem;
             transition: color 0.2s ease;
             position: relative;
         }
@@ -176,12 +209,12 @@
             left: 0;
             width: 0;
             height: 2px;
-            background: var(--accent-primary);
+            background: linear-gradient(90deg, var(--saber-blue), var(--saber-red));
             transition: width 0.2s ease;
         }
 
         .nav-links a:hover {
-            color: var(--accent-primary);
+            color: var(--fg-primary);
         }
 
         .nav-links a:hover::after {
@@ -197,7 +230,7 @@
             border-radius: 8px;
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             text-decoration: none;
             border: none;
             cursor: pointer;
@@ -205,14 +238,14 @@
         }
 
         .btn-primary {
-            background: var(--accent-primary);
-            color: var(--bg-primary);
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            color: white;
+            box-shadow: 0 4px 16px rgba(0, 170, 255, 0.3);
         }
 
         .btn-primary:hover {
-            background: #00ff99;
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 170, 255, 0.4), 0 8px 24px rgba(255, 51, 102, 0.4);
         }
 
         .btn-secondary {
@@ -226,20 +259,21 @@
             color: var(--accent-primary);
         }
 
-        .btn-github {
+        .btn-quest {
             background: var(--bg-card);
             color: var(--fg-primary);
             border: 1px solid var(--border-color);
         }
 
-        .btn-github:hover {
+        .btn-quest:hover {
             background: var(--bg-secondary);
-            border-color: var(--accent-primary);
+            border-color: var(--quest-green);
+            color: var(--quest-green);
         }
 
         /* Hero Section */
         .hero {
-            padding: 80px 0 100px;
+            padding: 100px 0 120px;
             position: relative;
             z-index: 1;
             text-align: center;
@@ -250,34 +284,47 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
+            background: rgba(0, 170, 255, 0.1);
+            border: 1px solid rgba(0, 170, 255, 0.3);
             border-radius: 100px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            color: var(--accent-primary);
+            color: var(--accent-blue);
             margin-bottom: 32px;
-            animation: pulse 2s ease-in-out infinite;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.2); }
-            50% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0); }
+        .hero-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
         .hero h1 {
             font-family: 'Orbitron', monospace;
             font-weight: 900;
-            font-size: clamp(2.5rem, 8vw, 5rem);
-            line-height: 1.1;
+            font-size: clamp(2.5rem, 7vw, 4.5rem);
+            line-height: 1.05;
             letter-spacing: -0.03em;
-            margin-bottom: 24px;
-            background: linear-gradient(135deg, var(--fg-primary) 0%, var(--accent-primary) 50%, var(--fg-primary) 100%);
+            margin-bottom: 20px;
+        }
+
+        .hero-title-gradient {
+            background: linear-gradient(135deg, var(--fg-primary) 0%, var(--saber-blue) 30%, var(--saber-red) 70%, var(--fg-primary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             background-size: 200% 200%;
-            animation: gradient-shift 3s ease infinite;
+            animation: gradient-shift 4s ease infinite;
         }
 
         @keyframes gradient-shift {
@@ -286,11 +333,16 @@
         }
 
         .hero-subtitle {
-            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            font-size: clamp(1.1rem, 2.5vw, 1.35rem);
             color: var(--fg-secondary);
-            max-width: 700px;
-            margin: 0 auto 48px;
+            max-width: 720px;
+            margin: 0 auto 40px;
             line-height: 1.7;
+        }
+
+        .hero-subtitle .highlight {
+            color: var(--fg-primary);
+            font-weight: 500;
         }
 
         .hero-actions {
@@ -306,6 +358,8 @@
             justify-content: center;
             gap: 48px;
             flex-wrap: wrap;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-color);
         }
 
         .stat {
@@ -316,35 +370,48 @@
             font-family: 'Orbitron', monospace;
             font-weight: 700;
             font-size: 2.5rem;
-            color: var(--accent-primary);
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             line-height: 1;
         }
 
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             color: var(--fg-muted);
             margin-top: 4px;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
         }
 
-        /* Saber Visualization */
-        .saber-showcase {
+        /* Saber Preview */
+        .saber-preview {
             position: relative;
-            height: 300px;
+            height: 280px;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
+            gap: 40px;
             margin-top: 40px;
+            perspective: 1000px;
         }
 
         .saber {
             position: relative;
-            width: 12px;
-            height: 200px;
-            background: linear-gradient(to top, #1a1a24, #2a2a3a);
-            border-radius: 6px 6px 0 0;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+            width: 14px;
+            height: 220px;
+            background: linear-gradient(to top, #1a1a24, #2a2a3a, #3a3a4a);
+            border-radius: 7px 7px 0 0;
+            box-shadow:
+                inset 0 2px 8px rgba(0,0,0,0.5),
+                inset 0 -2px 8px rgba(255,255,255,0.05);
+            transform-style: preserve-3d;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .saber:nth-child(2) {
+            animation-delay: -1.5s;
         }
 
         .saber::before {
@@ -353,70 +420,123 @@
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            width: 12px;
-            height: 12px;
-            background: var(--bg-card);
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #2a2a3a, #3a3a4a);
             border-radius: 50%;
-            box-shadow: 0 0 16px var(--accent-glow);
+            box-shadow: 0 0 20px currentColor;
         }
+
+        .saber-blue .saber::before { color: var(--saber-blue); }
+        .saber-red .saber::before { color: var(--saber-red); }
 
         .saber-blade {
             position: absolute;
             bottom: 100%;
             left: 50%;
             transform: translateX(-50%);
-            width: 16px;
+            width: 18px;
             height: 0;
-            background: linear-gradient(to top, var(--accent-primary), #ffffff);
-            border-radius: 8px 8px 0 0;
+            border-radius: 9px 9px 0 0;
             box-shadow:
-                0 0 24px var(--accent-glow),
-                0 0 48px var(--accent-glow),
-                0 0 96px var(--accent-glow);
-            animation: ignite 2s ease-out forwards, hum 1.5s ease-in-out infinite;
-            animation-delay: 0.5s, 2.5s;
-            filter: blur(1px);
+                0 0 20px currentColor,
+                0 0 40px currentColor,
+                0 0 80px currentColor;
+            animation: ignite 1.5s ease-out forwards, hum 1.2s ease-in-out infinite;
+            animation-delay: 0.5s, 2s;
+            filter: blur(0.5px);
+        }
+
+        .saber-blue .saber-blade {
+            background: linear-gradient(to top, var(--saber-blue), #ffffff);
+            color: var(--saber-blue);
+        }
+
+        .saber-red .saber-blade {
+            background: linear-gradient(to top, var(--saber-red), #ffffff);
+            color: var(--saber-red);
         }
 
         .saber-blade::before {
             content: '';
             position: absolute;
             inset: 2px;
-            background: linear-gradient(to top, rgba(255,255,255,0.8), rgba(255,255,255,0.2));
-            border-radius: 6px 6px 0 0;
+            background: linear-gradient(to top, rgba(255,255,255,0.9), rgba(255,255,255,0.3));
+            border-radius: 7px 7px 0 0;
             filter: blur(2px);
         }
 
         @keyframes ignite {
             from { height: 0; opacity: 0; }
-            to { height: 180px; opacity: 1; }
+            to { height: 200px; opacity: 1; }
         }
 
         @keyframes hum {
-            0%, 100% { transform: translateX(-50%) scaleY(1); filter: blur(1px) brightness(1); }
-            50% { transform: translateX(-50%) scaleY(1.02); filter: blur(1.5px) brightness(1.2); }
+            0%, 100% {
+                transform: translateX(-50%) scaleY(1);
+                filter: blur(0.5px) brightness(1);
+                width: 18px;
+            }
+            50% {
+                transform: translateX(-50%) scaleY(1.015);
+                filter: blur(1px) brightness(1.15);
+                width: 20px;
+            }
         }
 
-        .saber-hilt-details {
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateX(0deg); }
+            50% { transform: translateY(-8px) rotateX(2deg); }
+        }
+
+        .saber-hilt {
             position: absolute;
-            bottom: 20px;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 60px;
+            background: linear-gradient(180deg, #2a2a3a, #1a1a24);
+            border-radius: 0 0 8px 8px;
+            border: 1px solid #3a3a4a;
+        }
+
+        .hilt-details {
+            position: absolute;
+            bottom: 8px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
         }
 
         .hilt-ring {
-            width: 20px;
-            height: 4px;
+            width: 30px;
+            height: 3px;
             background: linear-gradient(90deg, #3a3a4a, #4a4a5a, #3a3a4a);
             border-radius: 2px;
         }
 
         .hilt-ring.accent {
-            background: linear-gradient(90deg, var(--accent-primary), #00cc6a, var(--accent-primary));
+            background: linear-gradient(90deg, currentColor, currentColor);
+        }
+
+        .saber-blue .hilt-ring.accent { color: var(--saber-blue); }
+        .saber-red .hilt-ring.accent { color: var(--saber-red); }
+
+        .saber-label {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--fg-muted);
+            white-space: nowrap;
         }
 
         /* Sections */
@@ -433,7 +553,7 @@
 
         .section-label {
             font-family: 'Orbitron', monospace;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             letter-spacing: 0.15em;
             text-transform: uppercase;
@@ -444,19 +564,75 @@
         .section-title {
             font-family: 'Orbitron', monospace;
             font-weight: 700;
-            font-size: clamp(2rem, 5vw, 3rem);
+            font-size: clamp(2rem, 4.5vw, 2.8rem);
             letter-spacing: -0.02em;
             color: var(--fg-primary);
         }
 
+        /* What is it */
+        .what-is {
+            background: var(--bg-secondary);
+        }
+
+        .what-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .what-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .what-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+            box-shadow: var(--card-shadow), 0 0 32px rgba(0, 170, 255, 0.1);
+        }
+
+        .what-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(0, 170, 255, 0.15), rgba(0, 255, 136, 0.1));
+            border: 1px solid rgba(0, 170, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .what-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke: var(--accent-blue);
+        }
+
+        .what-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+            color: var(--fg-primary);
+        }
+
+        .what-desc {
+            color: var(--fg-secondary);
+            line-height: 1.7;
+        }
+
         /* Features */
         .features {
-            background: var(--bg-secondary);
+            background: var(--bg-primary);
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
         }
 
@@ -466,19 +642,38 @@
             border-radius: 16px;
             padding: 32px;
             transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--saber-blue), var(--saber-red));
+            transform: scaleY(0);
+            transform-origin: top;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleY(1);
         }
 
         .feature-card:hover {
             transform: translateY(-4px);
-            border-color: var(--accent-primary);
-            box-shadow: var(--card-shadow), 0 0 32px rgba(0, 255, 136, 0.1);
+            border-color: var(--saber-blue);
+            box-shadow: var(--card-shadow), 0 0 32px rgba(0, 170, 255, 0.1);
         }
 
         .feature-icon {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 204, 106, 0.1));
-            border: 1px solid rgba(0, 255, 136, 0.2);
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, rgba(255, 51, 102, 0.15), rgba(255, 80, 120, 0.1));
+            border: 1px solid rgba(255, 51, 102, 0.2);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -487,76 +682,118 @@
         }
 
         .feature-icon svg {
-            width: 28px;
-            height: 28px;
-            stroke: var(--accent-primary);
+            width: 26px;
+            height: 26px;
+            stroke: var(--saber-red);
         }
 
         .feature-title {
             font-family: 'Orbitron', monospace;
             font-weight: 700;
-            font-size: 1.25rem;
-            margin-bottom: 12px;
+            font-size: 1.15rem;
+            margin-bottom: 10px;
             color: var(--fg-primary);
         }
 
         .feature-desc {
             color: var(--fg-secondary);
             line-height: 1.7;
+            font-size: 0.95rem;
         }
 
-        /* About Section */
-        .about {
+        /* Comparison */
+        .comparison {
+            background: var(--bg-secondary);
+        }
+
+        .comparison-table {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 16px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--fg-muted);
+            background: var(--bg-card);
+        }
+
+        th:first-child { border-radius: 12px 0 0 0; }
+        th:last-child { border-radius: 0 12px 0 0; }
+
+        tr:last-child td { border-bottom: none; }
+
+        td:first-child {
+            font-weight: 600;
+            color: var(--fg-primary);
+        }
+
+        .check { color: var(--accent-primary); }
+        .cross { color: var(--fg-muted); }
+        .partial { color: #ffaa00; }
+
+        .highlight-row {
+            background: rgba(0, 170, 255, 0.05);
+        }
+
+        /* Installation */
+        .install {
             background: var(--bg-primary);
         }
 
-        .about-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-        }
-
-        .about-text .section-header {
-            text-align: left;
-        }
-
-        .about-text .section-title {
-            margin-bottom: 24px;
-        }
-
-        .about-desc {
-            color: var(--fg-secondary);
-            font-size: 1.1rem;
-            line-height: 1.8;
-            margin-bottom: 24px;
-        }
-
-        .about-list {
-            list-style: none;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px 24px;
-        }
-
-        .about-list li {
+        .install-tabs {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             color: var(--fg-secondary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .about-list li::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: var(--accent-primary);
-            border-radius: 50%;
-            flex-shrink: 0;
+        .tab-btn.active,
+        .tab-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(0, 255, 136, 0.1);
         }
 
-        .about-visual {
-            position: relative;
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .code-block {
@@ -565,23 +802,66 @@
             border-radius: 12px;
             padding: 24px;
             font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             line-height: 1.7;
             overflow-x: auto;
             box-shadow: var(--card-shadow);
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        .code-line {
-            display: block;
-        }
-
+        .code-line { display: block; }
         .code-comment { color: var(--fg-muted); }
-        .code-keyword { color: var(--accent-secondary); }
-        .code-function { color: var(--accent-primary); }
-        .code-string { color: #ffcc00; }
-        .code-class { color: #ff8844; }
+        .code-keyword { color: var(--saber-red); }
+        .code-function { color: var(--accent-blue); }
+        .code-string { color: var(--accent-primary); }
+        .code-number { color: #ffaa00; }
+        .code-operator { color: var(--fg-muted); }
 
-        /* Community Section */
+        .install-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .step-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: white;
+            margin: 0 auto 16px;
+            box-shadow: 0 4px 16px rgba(0, 170, 255, 0.3);
+        }
+
+        .step-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            color: var(--fg-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Community */
         .community {
             background: var(--bg-secondary);
         }
@@ -602,7 +882,7 @@
         }
 
         .community-card:hover {
-            border-color: var(--accent-secondary);
+            border-color: var(--saber-red);
             box-shadow: var(--card-shadow), 0 0 32px rgba(255, 51, 102, 0.1);
         }
 
@@ -621,7 +901,7 @@
         .community-icon svg {
             width: 36px;
             height: 36px;
-            stroke: var(--accent-secondary);
+            stroke: var(--saber-red);
         }
 
         .community-title {
@@ -634,84 +914,6 @@
         .community-desc {
             color: var(--fg-secondary);
             margin-bottom: 20px;
-        }
-
-        /* Getting Started */
-        .getting-started {
-            background: var(--bg-primary);
-        }
-
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 32px;
-            position: relative;
-        }
-
-        .steps::before {
-            content: '';
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: calc(100% - 80px);
-            background: linear-gradient(to bottom, transparent, var(--accent-primary), transparent);
-            z-index: 0;
-        }
-
-        @media (max-width: 768px) {
-            .steps::before {
-                left: 48px;
-            }
-        }
-
-        .step {
-            position: relative;
-            z-index: 1;
-            padding-left: 80px;
-        }
-
-        @media (max-width: 768px) {
-            .step {
-                padding-left: 72px;
-            }
-        }
-
-        .step-number {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 56px;
-            height: 56px;
-            background: var(--bg-card);
-            border: 2px solid var(--border-color);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Orbitron', monospace;
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--fg-muted);
-            transition: all 0.3s ease;
-        }
-
-        .step:hover .step-number {
-            border-color: var(--accent-primary);
-            color: var(--accent-primary);
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .step-title {
-            font-family: 'Orbitron', monospace;
-            font-weight: 700;
-            font-size: 1.25rem;
-            margin-bottom: 8px;
-        }
-
-        .step-desc {
-            color: var(--fg-secondary);
         }
 
         /* Footer */
@@ -756,7 +958,7 @@
         .footer-title {
             font-family: 'Orbitron', monospace;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             color: var(--fg-primary);
@@ -774,6 +976,7 @@
             color: var(--fg-secondary);
             text-decoration: none;
             transition: color 0.2s ease;
+            font-size: 0.95rem;
         }
 
         .footer-links a:hover {
@@ -792,12 +995,12 @@
 
         .footer-copyright {
             color: var(--fg-muted);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .footer-social {
             display: flex;
-            gap: 16px;
+            gap: 12px;
         }
 
         .footer-social a {
@@ -824,6 +1027,24 @@
             height: 20px;
         }
 
+        /* Quest Badge */
+        .quest-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--quest-green);
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .nav-links {
@@ -834,17 +1055,18 @@
                 gap: 32px;
             }
 
-            .about-content {
-                grid-template-columns: 1fr;
-                gap: 40px;
+            .saber-preview {
+                height: 200px;
+                gap: 24px;
             }
 
-            .about-text .section-header {
-                text-align: center;
+            .saber {
+                height: 160px;
             }
 
-            .about-list {
-                justify-content: center;
+            @keyframes ignite {
+                from { height: 0; opacity: 0; }
+                to { height: 140px; opacity: 1; }
             }
         }
 
@@ -863,6 +1085,12 @@
             outline: 2px solid var(--accent-primary);
             outline-offset: 2px;
         }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
     </style>
 </head>
 <body>
@@ -882,21 +1110,26 @@
                         </svg>
                     </div>
                     <span class="logo-text font-display">FreeSabers</span>
+                    <span class="logo-tag">Quest Mod</span>
                 </a>
                 <nav aria-label="Main navigation">
                     <ul class="nav-links">
+                        <li><a href="#what-is">What is it?</a></li>
                         <li><a href="#features">Features</a></li>
-                        <li><a href="#about">About</a></li>
+                        <li><a href="#comparison">vs ReeSabers</a></li>
+                        <li><a href="#install">Installation</a></li>
                         <li><a href="#community">Community</a></li>
-                        <li><a href="#getting-started">Get Started</a></li>
                     </ul>
                 </nav>
-                <a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer" class="btn btn-github" aria-label="View on GitHub">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                    GitHub
-                </a>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer" class="btn btn-quest" aria-label="View on GitHub">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                    <a href="#install" class="btn btn-primary">Download</a>
+                </div>
             </div>
         </div>
     </header>
@@ -905,43 +1138,102 @@
         <section class="hero" aria-labelledby="hero-title">
             <div class="container">
                 <div class="hero-badge" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M12 6v6l4 2"/>
-                    </svg>
-                    <span>Open Source • Community Driven • Free Forever</span>
+                    <span>Beat Saber Quest Mod</span>
                 </div>
-                <h1 id="hero-title" class="font-display">FreeSabers</h1>
-                <p class="hero-subtitle">An open source lightsaber project for makers, cosplayers, and enthusiasts. Build your own customizable saber with community-driven designs, open hardware, and free software.</p>
+                <h1 id="hero-title" class="font-display">
+                    <span class="hero-title-gradient">FreeSabers</span>
+                </h1>
+                <p class="hero-subtitle">Free, open-source custom sabers for <span class="highlight">Beat Saber on Meta Quest</span>. A <span class="highlight">ReeSabers alternative</span> built by the community, for the community.</p>
                 <div class="hero-actions">
-                    <a href="#getting-started" class="btn btn-primary">Start Building</a>
-                    <a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View on GitHub</a>
+                    <a href="https://github.com/donoigabriel6-a11y/FreeSabers/releases" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Download Latest
+                    </a>
+                    <a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View Source</a>
                 </div>
                 <div class="hero-stats">
                     <div class="stat">
                         <div class="stat-value font-display">100%</div>
-                        <div class="stat-label">Open Source</div>
+                        <div class="stat-label">Free & Open Source</div>
                     </div>
                     <div class="stat">
                         <div class="stat-value font-display">∞</div>
-                        <div class="stat-label">Customization</div>
+                        <div class="stat-label">Custom Sabers</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value font-display">Free</div>
-                        <div class="stat-label">Forever</div>
+                        <div class="stat-value font-display">No</div>
+                        <div class="stat-label">Ads or Tracking</div>
                     </div>
                 </div>
 
-                <div class="saber-showcase" aria-hidden="true">
-                    <div class="saber">
+                <div class="saber-preview" aria-hidden="true" aria-label="Blue and red saber preview">
+                    <div class="saber saber-blue">
                         <div class="saber-blade"></div>
-                        <div class="saber-hilt-details">
-                            <div class="hilt-ring accent"></div>
-                            <div class="hilt-ring"></div>
-                            <div class="hilt-ring accent"></div>
-                            <div class="hilt-ring"></div>
+                        <div class="saber-hilt">
+                            <div class="hilt-details">
+                                <div class="hilt-ring accent"></div>
+                                <div class="hilt-ring"></div>
+                                <div class="hilt-ring accent"></div>
+                            </div>
                         </div>
+                        <span class="saber-label">Blue Saber</span>
                     </div>
+                    <div class="saber saber-red">
+                        <div class="saber-blade"></div>
+                        <div class="saber-hilt">
+                            <div class="hilt-details">
+                                <div class="hilt-ring accent"></div>
+                                <div class="hilt-ring"></div>
+                                <div class="hilt-ring accent"></div>
+                            </div>
+                        </div>
+                        <span class="saber-label">Red Saber</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="what-is" class="what-is" aria-labelledby="what-title">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-label font-display">About</span>
+                    <h2 id="what-title" class="section-title font-display">What is FreeSabers?</h2>
+                </header>
+                <div class="what-grid">
+                    <article class="what-card">
+                        <div class="what-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </div>
+                        <h3 class="what-title font-display">Open Source Alternative</h3>
+                        <p class="what-desc">FreeSabers is a free, open-source Beat Saber Quest mod that lets you use custom saber models in-game. No paywalls, no subscriptions, no locked features — everything is free forever under the MIT license.</p>
+                    </article>
+                    <article class="what-card">
+                        <div class="what-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 18 22 12 16 6"/>
+                                <polyline points="8 6 2 12 8 18"/>
+                            </svg>
+                        </div>
+                        <h3 class="what-title font-display">ReeSabers Compatible</h3>
+                        <p class="what-desc">Uses the same saber format as ReeSabers. Download sabers from the same community sources, drop them in your Quest, and play. No conversion needed — it just works.</p>
+                    </article>
+                    <article class="what-card">
+                        <div class="what-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M2 12h20"/>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                        </div>
+                        <h3 class="what-title font-display">Community Driven</h3>
+                        <p class="what-desc">Built by Beat Saber modders for modders. The code is on GitHub — contribute features, fix bugs, add saber formats, or help with documentation. No corporate ownership, no hidden agendas.</p>
+                    </article>
                 </div>
             </div>
         </section>
@@ -961,29 +1253,28 @@
                                 <path d="M12 17v4"/>
                             </svg>
                         </div>
-                        <h3 class="feature-title font-display">Open Hardware</h3>
-                        <p class="feature-desc">Complete CAD files, schematics, and BOM for 3D printed and machined hilt components. Compatible with standard electronics.</p>
+                        <h3 class="feature-title font-display">Custom Saber Models</h3>
+                        <p class="feature-desc">Load .saber files with custom models, trails, shaders, and sounds. Supports the full ReeSabers format specification.</p>
                     </article>
                     <article class="feature-card">
                         <div class="feature-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="16 18 22 12 16 6"/>
-                                <polyline points="8 6 2 12 8 18"/>
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                <path d="M9 12l2 2 4-4"/>
                             </svg>
                         </div>
-                        <h3 class="feature-title font-display">Custom Firmware</h3>
-                        <p class="feature-desc">Arduino/ESP32 based firmware with smooth swing, gesture controls, blade styles, and sound font support. Fully configurable via web interface.</p>
+                        <h3 class="feature-title font-display">In-Game Menu</h3>
+                        <p class="feature-desc">Full BMBF/ModSettings UI integration. Browse, preview, and switch sabers without leaving the game. Search and filter your collection.</p>
                     </article>
                     <article class="feature-card">
                         <div class="feature-icon" aria-hidden="true">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"/>
-                                <path d="M2 12h20"/>
-                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                                <path d="M12 6v6l4 2"/>
                             </svg>
                         </div>
-                        <h3 class="feature-title font-display">Modular Design</h3>
-                        <p class="feature-desc">Swap emitters, pommels, switches, and chassis parts. Standardized connections let you mix and match components freely.</p>
+                        <h3 class="feature-title font-display">Trail Customization</h3>
+                        <p class="feature-desc">Per-saber trail colors, widths, textures, and animation speeds. Create unique visual signatures for every saber in your library.</p>
                     </article>
                     <article class="feature-card">
                         <div class="feature-icon" aria-hidden="true">
@@ -994,8 +1285,8 @@
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                             </svg>
                         </div>
-                        <h3 class="feature-title font-display">Community Driven</h3>
-                        <p class="feature-desc">Built by makers for makers. Share designs, contribute code, request features, and collaborate with sabersmiths worldwide.</p>
+                        <h3 class="feature-title font-display">Multiplayer Safe</h3>
+                        <p class="feature-desc">Designed for multiplayer compatibility. Sabers sync correctly in co-op and party modes. No desync issues, no crashes.</p>
                     </article>
                     <article class="feature-card">
                         <div class="feature-icon" aria-hidden="true">
@@ -1003,8 +1294,8 @@
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                             </svg>
                         </div>
-                        <h3 class="feature-title font-display">Proffie & CFX Support</h3>
-                        <p class="feature-desc">Compatible with popular boards like Proffieboard, CFX, Golden Harvest, and more. Use your existing hardware.</p>
+                        <h3 class="feature-title font-display">Performance Optimized</h3>
+                        <p class="feature-desc">Built for Quest's mobile GPU. Efficient rendering, minimal memory footprint, and zero frame drops even with complex saber models.</p>
                     </article>
                     <article class="feature-card">
                         <div class="feature-icon" aria-hidden="true">
@@ -1014,50 +1305,161 @@
                                 <line x1="12" y1="17" x2="12" y2="21"/>
                             </svg>
                         </div>
-                        <h3 class="feature-title font-display">Web Configurator</h3>
-                        <p class="feature-desc">Browser-based configuration tool for blade styles, motion settings, and sound fonts. No drivers or software installation needed.</p>
+                        <h3 class="feature-title font-display">Auto-Updates</h3>
+                        <p class="feature-desc">Optional update notifications via GitHub Releases. One-tap updates keep you on the latest version with new features and fixes.</p>
                     </article>
                 </div>
             </div>
         </section>
 
-        <section id="about" class="about" aria-labelledby="about-title">
+        <section id="comparison" class="comparison" aria-labelledby="comparison-title">
             <div class="container">
-                <div class="about-content">
-                    <div class="about-text">
-                        <header class="section-header">
-                            <span class="section-label font-display">About</span>
-                            <h2 id="about-title" class="section-title font-display">Why FreeSabers?</h2>
-                        </header>
-                        <p class="about-desc">Commercial lightsabers cost hundreds of dollars and lock you into proprietary ecosystems. FreeSabers changes that by providing completely open designs, firmware, and tools that anyone can build, modify, and share.</p>
-                        <p class="about-desc">Whether you're a seasoned maker with a machine shop or a beginner with a 3D printer, FreeSabers gives you the freedom to create exactly the saber you want—without licensing fees, vendor lock-in, or artificial limitations.</p>
-                        <ul class="about-list" aria-label="FreeSabers principles">
-                            <li>MIT Licensed — use commercially or personally</li>
-                            <li>No vendor lock-in — standard components</li>
-                            <li>Community governed — not corporate owned</li>
-                            <li>Extensible architecture — build on top of it</li>
-                            <li>Beginner friendly — comprehensive docs</li>
-                            <li>Advanced capable — pro features included</li>
-                        </ul>
+                <header class="section-header">
+                    <span class="section-label font-display">Comparison</span>
+                    <h2 id="comparison-title" class="section-title font-display">FreeSabers vs ReeSabers</h2>
+                </header>
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>FreeSabers</th>
+                                <th>ReeSabers</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Price</td>
+                                <td><span class="check">✓</span> Free (MIT License)</td>
+                                <td><span class="cross">✗</span> Paid / Patreon</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td>Source Code</td>
+                                <td><span class="check">✓</span> Fully Open Source</td>
+                                <td><span class="cross">✗</span> Closed Source</td>
+                            </tr>
+                            <tr>
+                                <td>Saber Format</td>
+                                <td><span class="check">✓</span> ReeSabers Compatible</td>
+                                <td><span class="check">✓</span> Native Format</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td>Custom Sabers</td>
+                                <td><span class="check">✓</span> Unlimited</td>
+                                <td><span class="partial">~</span> Tier Limited</td>
+                            </tr>
+                            <tr>
+                                <td>In-Game Menu</td>
+                                <td><span class="check">✓</span> Full UI</td>
+                                <td><span class="check">✓</span> Full UI</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td>Multiplayer Support</td>
+                                <td><span class="check">✓</span> Yes</td>
+                                <td><span class="check">✓</span> Yes</td>
+                            </tr>
+                            <tr>
+                                <td>Trail Customization</td>
+                                <td><span class="check">✓</span> Full Control</td>
+                                <td><span class="check">✓</span> Full Control</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td>Community Sabers</td>
+                                <td><span class="check">✓</span> Works with all</td>
+                                <td><span class="check">✓</span> Works with all</td>
+                            </tr>
+                            <tr>
+                                <td>Ads / Tracking</td>
+                                <td><span class="check">✓</span> None</td>
+                                <td><span class="cross">✗</span> Analytics</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td>Quest 2 / 3 / Pro</td>
+                                <td><span class="check">✓</span> All Supported</td>
+                                <td><span class="check">✓</span> All Supported</td>
+                            </tr>
+                            <tr>
+                                <td>Contributing</td>
+                                <td><span class="check">✓</span> Welcome PRs</td>
+                                <td><span class="cross">✗</span> Not Possible</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="install" class="install" aria-labelledby="install-title">
+            <div class="container">
+                <header class="section-header">
+                    <span class="section-label font-display">Installation</span>
+                    <h2 id="install-title" class="section-title font-display">Get Started in Minutes</h2>
+                </header>
+
+                <div class="install-tabs" role="tablist" aria-label="Installation methods">
+                    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-bmbf" id="tab-bmbf" onclick="showTab('bmbf')">BMBF / Mod Manager</button>
+                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-manual" id="tab-manual" onclick="showTab('manual')">Manual (SideQuest)</button>
+                    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-dev" id="tab-dev" onclick="showTab('dev')">Developer Build</button>
+                </div>
+
+                <div class="tab-content active" id="panel-bmbf" role="tabpanel" aria-labelledby="tab-bmbf">
+                    <div class="code-block" aria-label="BMBF installation commands">
+                        <span class="code-line"><span class="code-comment"># 1. Install BMBF on your Quest</span></span>
+                        <span class="code-line"><span class="code-comment"># 2. Open BMBF web interface</span></span>
+                        <span class="code-line"><span class="code-comment"># 3. Go to "Mods" → "Online" → Search "FreeSabers"</span></span>
+                        <span class="code-line"><span class="code-comment"># 4. Click "Install" → "Sync to Beat Saber"</span></span>
+                        <span class="code-line"></span>
+                        <span class="code-line"><span class="code-comment"># Or use the direct download link:</span></span>
+                        <span class="code-line"><span class="code-keyword">https://github.com/donoigabriel6-a11y/FreeSabers/releases/latest/download/FreeSabers.qmod</span></span>
                     </div>
-                    <div class="about-visual">
-                        <div class="code-block" aria-label="Example configuration code">
-                            <span class="code-line"><span class="code-comment">// FreeSabers config example</span></span>
-                            <span class="code-line"><span class="code-keyword">const</span> saberConfig = {</span>
-                            <span class="code-line">  <span class="code-function">bladeStyle</span>: <span class="code-string">"Unstable"</span>,</span>
-                            <span class="code-line">  <span class="code-function">color</span>: <span class="code-string">"#00ff88"</span>,</span>
-                            <span class="code-line">  <span class="code-function">soundFont</span>: <span class="code-string">"kyber"</span>,</span>
-                            <span class="code-line">  <span class="code-function">smoothSwing</span>: {</span>
-                            <span class="code-line">    <span class="code-function">sensitivity</span>: <span class="code-string">0.85</span>,</span>
-                            <span class="code-line">    <span class="code-function">sharpness</span>: <span class="code-string">1.2</span></span>
-                            <span class="code-line">  },</span>
-                            <span class="code-line">  <span class="code-function">gestures</span>: {</span>
-                            <span class="code-line">    <span class="code-function">twistOn</span>: <span class="code-string">true</span>,</span>
-                            <span class="code-line">    <span class="code-function">swingLockup</span>: <span class="code-string">true</span></span>
-                            <span class="code-line">  }</span>
-                            <span class="code-line">};</span>
-                        </div>
+                </div>
+
+                <div class="tab-content" id="panel-manual" role="tabpanel" aria-labelledby="tab-manual">
+                    <div class="code-block" aria-label="Manual installation commands">
+                        <span class="code-line"><span class="code-comment"># 1. Download latest .qmod from GitHub Releases</span></span>
+                        <span class="code-line"><span class="code-keyword">https://github.com/donoigabriel6-a11y/FreeSabers/releases</span></span>
+                        <span class="code-line"></span>
+                        <span class="code-line"><span class="code-comment"># 2. Connect Quest via USB, enable Developer Mode</span></span>
+                        <span class="code-line"><span class="code-comment"># 3. Open SideQuest → "Install APK from file" → Select .qmod</span></span>
+                        <span class="code-line"></span>
+                        <span class="code-line"><span class="code-comment"># 4. Launch Beat Saber → Mods menu → Enable FreeSabers</span></span>
                     </div>
+                </div>
+
+                <div class="tab-content" id="panel-dev" role="tabpanel" aria-labelledby="tab-dev">
+                    <div class="code-block" aria-label="Developer build commands">
+                        <span class="code-line"><span class="code-comment"># Clone and build from source</span></span>
+                        <span class="code-line"><span class="code-keyword">git clone https://github.com/donoigabriel6-a11y/FreeSabers.git</span></span>
+                        <span class="code-line"><span class="code-keyword">cd FreeSabers</span></span>
+                        <span class="code-line"><span class="code-keyword">./gradlew buildQuest</span></span>
+                        <span class="code-line"></span>
+                        <span class="code-line"><span class="code-comment"># Output: build/outputs/FreeSabers.qmod</span></span>
+                        <span class="code-line"></span>
+                        <span class="code-line"><span class="code-comment"># Requires: Android SDK, NDK, Quest Developer Mode</span></span>
+                    </div>
+                </div>
+
+                <div class="install-steps">
+                    <article class="step-card">
+                        <div class="step-number font-display">1</div>
+                        <h3 class="step-title font-display">Install Mod Loader</h3>
+                        <p class="step-desc">Set up BMBF or use SideQuest to install the .qmod file on your Quest headset.</p>
+                    </article>
+                    <article class="step-card">
+                        <div class="step-number font-display">2</div>
+                        <h3 class="step-title font-display">Enable FreeSabers</h3>
+                        <p class="step-desc">Launch Beat Saber, open the Mods menu, and toggle FreeSabers on. Restart if prompted.</p>
+                    </article>
+                    <article class="step-card">
+                        <div class="step-number font-display">3</div>
+                        <h3 class="step-title font-display">Add Sabers</h3>
+                        <p class="step-desc">Download .saber files from the community, place them in /sdcard/ModData/com.beatgames.beatsaber/Mods/FreeSabers/Sabers/</p>
+                    </article>
+                    <article class="step-card">
+                        <div class="step-number font-display">4</div>
+                        <h3 class="step-title font-display">Play!</h3>
+                        <p class="step-desc">Open the FreeSabers in-game menu, select your saber, and start slicing blocks with style.</p>
+                    </article>
                 </div>
             </div>
         </section>
@@ -1066,7 +1468,7 @@
             <div class="container">
                 <header class="section-header">
                     <span class="section-label font-display">Community</span>
-                    <h2 id="community-title" class="section-title font-display">Join the Movement</h2>
+                    <h2 id="community-title" class="section-title font-display">Join the Community</h2>
                 </header>
                 <div class="community-grid">
                     <article class="community-card">
@@ -1078,19 +1480,9 @@
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                             </svg>
                         </div>
-                        <h3 class="community-title font-display">Discord Community</h3>
-                        <p class="community-desc">Chat with fellow builders, get help with your build, share progress, and collaborate on new designs.</p>
-                        <a href="#" class="btn btn-secondary">Join Discord</a>
-                    </article>
-                    <article class="community-card">
-                        <div class="community-icon" aria-hidden="true">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                            </svg>
-                        </div>
-                        <h3 class="community-title font-display">Open Repository</h3>
-                        <p class="community-desc">All designs, firmware, and documentation live on GitHub. Fork, contribute, report issues, or start discussions.</p>
-                        <a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View Repository</a>
+                        <h3 class="community-title font-display">GitHub Repository</h3>
+                        <p class="community-desc">Report issues, request features, contribute code, or browse the source. All development happens in the open.</p>
+                        <a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">View on GitHub</a>
                     </article>
                     <article class="community-card">
                         <div class="community-icon" aria-hidden="true">
@@ -1099,41 +1491,24 @@
                                 <path d="M12 6v6l4 2"/>
                             </svg>
                         </div>
-                        <h3 class="community-title font-display">Documentation Wiki</h3>
-                        <p class="community-desc">Comprehensive guides for assembly, wiring, configuration, and troubleshooting. Maintained by the community.</p>
-                        <a href="#" class="btn btn-secondary">Read Docs</a>
+                        <h3 class="community-title font-display">Discord Server</h3>
+                        <p class="community-desc">Chat with other modders, get help installing, share your saber creations, and stay updated on releases.</p>
+                        <a href="#" class="btn btn-secondary">Join Discord</a>
                     </article>
-                </div>
-            </div>
-        </section>
-
-        <section id="getting-started" class="getting-started" aria-labelledby="getting-started-title">
-            <div class="container">
-                <header class="section-header">
-                    <span class="section-label font-display">Get Started</span>
-                    <h2 id="getting-started-title" class="section-title font-display">Build Your First Saber</h2>
-                </header>
-                <div class="steps">
-                    <div class="step">
-                        <div class="step-number font-display">01</div>
-                        <h3 class="step-title font-display">Choose Your Path</h3>
-                        <p class="step-desc">Decide between 3D printed, machined, or hybrid construction. Browse the parts library and pick a hilt design that fits your vision.</p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number font-display">02</div>
-                        <h3 class="step-title font-display">Gather Components</h3>
-                        <p class="step-desc">Order electronics (board, battery, LED, speaker, switches) and print or machine your hilt parts. The BOM generator creates a complete shopping list.</p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number font-display">03</div>
-                        <h3 class="step-title font-display">Assemble & Wire</h3>
-                        <p class="step-desc">Follow the step-by-step assembly guide with photos and wiring diagrams. No soldering experience? We have beginner-friendly options.</p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number font-display">04</div>
-                        <h3 class="step-title font-display">Configure & Ignite</h3>
-                        <p class="step-desc">Connect via USB or Bluetooth, customize your blade styles and sounds in the web configurator, then ignite your creation!</p>
-                    </div>
+                    <article class="community-card">
+                        <div class="community-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                        </div>
+                        <h3 class="community-title font-display">Saber Database</h3>
+                        <p class="community-desc">Browse thousands of community-made sabers compatible with FreeSabers. Curated collections, ratings, and previews.</p>
+                        <a href="#" class="btn btn-secondary">Browse Sabers</a>
+                    </article>
                 </div>
             </div>
         </section>
@@ -1153,38 +1528,38 @@
                         </div>
                         <span class="logo-text font-display">FreeSabers</span>
                     </a>
-                    <p class="footer-tagline">Open source lightsaber project for makers, cosplayers, and enthusiasts. Free forever, community driven.</p>
+                    <p class="footer-tagline">Free, open-source custom sabers for Beat Saber on Meta Quest. MIT Licensed • Community driven • No ads, no tracking.</p>
                 </div>
                 <nav aria-label="Quick links">
                     <h4 class="footer-title font-display">Quick Links</h4>
                     <ul class="footer-links">
+                        <li><a href="#what-is">What is FreeSabers?</a></li>
                         <li><a href="#features">Features</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#community">Community</a></li>
-                        <li><a href="#getting-started">Get Started</a></li>
+                        <li><a href="#comparison">vs ReeSabers</a></li>
+                        <li><a href="#install">Installation</a></li>
                     </ul>
                 </nav>
                 <nav aria-label="Resources">
                     <h4 class="footer-title font-display">Resources</h4>
                     <ul class="footer-links">
-                        <li><a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+                        <li><a href="https://github.com/donoigabriel6-a11y/FreeSabers/releases" target="_blank" rel="noopener noreferrer">Downloads</a></li>
+                        <li><a href="https://github.com/donoigabriel6-a11y/FreeSabers/issues" target="_blank" rel="noopener noreferrer">Issue Tracker</a></li>
                         <li><a href="#">Documentation</a></li>
-                        <li><a href="#">Parts Library</a></li>
-                        <li><a href="#">Configurator</a></li>
+                        <li><a href="#">Saber Format Spec</a></li>
                     </ul>
                 </nav>
                 <nav aria-label="Community">
                     <h4 class="footer-title font-display">Community</h4>
                     <ul class="footer-links">
                         <li><a href="#">Discord</a></li>
-                        <li><a href="#">Showcase</a></li>
-                        <li><a href="#">Contributing</a></li>
+                        <li><a href="#">Saber Showcase</a></li>
+                        <li><a href="#">Contributing Guide</a></li>
                         <li><a href="#">Code of Conduct</a></li>
                     </ul>
                 </nav>
             </div>
             <div class="footer-bottom">
-                <p class="footer-copyright">&copy; 2025 FreeSabers. MIT Licensed. Built with the community.</p>
+                <p class="footer-copyright">&copy; 2025 FreeSabers Contributors. MIT Licensed. Not affiliated with Meta, Beat Games, or ReeSabers.</p>
                 <div class="footer-social">
                     <a href="https://github.com/donoigabriel6-a11y/FreeSabers" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -1196,7 +1571,7 @@
                             <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.675 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.083.083 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-.199.076.076 0 0 0 .041-.106 13.107 13.107 0 0 0-.182-.814.077.077 0 0 1-.007-.128 10.2 10.2 0 0 1 .362-.964.073.073 0 0 1 .077-.03c3.928-1.795 7.18-3.559 9.086-5.334a.077.077 0 0 1 .078.03c.12.166.252.321.38.477a.076.076 0 0 0 .085-.028 13.981 13.981 0 0 0 .25-.772.077.077 0 0 1 .037-.087 18.246 18.246 0 0 0 2.371-3.527.075.075 0 0 0-.032-.083zM8.02 15.33c-1.183-.73-2.056-1.517-2.58-2.39a.077.077 0 0 1-.006-.127 13.272 13.272 0 0 1 .558-1.253.077.077 0 0 1 .087-.028c.826.06 1.71.205 2.392.445a.077.077 0 0 1 .044.116.077.077 0 0 1-.043.114 9.537 9.537 0 0 0-.95.506.077.077 0 0 1-.122.01zM15.986 15.33c1.183-.73 2.063-1.517 2.588-2.39a.077.077 0 0 0 .006-.127 13.27 13.27 0 0 0-.558-1.253.079.079 0 0 0-.087-.028c-.834.06-1.711.205-2.392.445a.077.077 0 0 0-.044.116.077.077 0 0 0 .044.114c.337.236.727.517.96.754a.077.077 0 0 1 .009.126 9.774 9.774 0 0 1-.956.506.077.077 0 0 1-.122-.01z"/>
                         </svg>
                     </a>
-                    <a href="#" aria-label="Twitter">
+                    <a href="#" aria-label="Twitter/X">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
                         </svg>
@@ -1205,5 +1580,44 @@
             </div>
         </div>
     </footer>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.tab-content').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            // Deactivate all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            });
+            // Show selected panel
+            const panel = document.getElementById('panel-' + tabName);
+            const tab = document.getElementById('tab-' + tabName);
+            if (panel && tab) {
+                panel.classList.add('active');
+                tab.classList.add('active');
+                tab.setAttribute('aria-selected', 'true');
+            }
+        }
+
+        // Keyboard navigation for tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('keydown', (e) => {
+                const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+                const currentIndex = tabs.indexOf(btn);
+                let nextIndex = currentIndex;
+                if (e.key === 'ArrowRight') nextIndex = (currentIndex + 1) % tabs.length;
+                else if (e.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                else if (e.key === 'Home') nextIndex = 0;
+                else if (e.key === 'End') nextIndex = tabs.length - 1;
+                else return;
+                e.preventDefault();
+                tabs[nextIndex].focus();
+                tabs[nextIndex].click();
+            });
+        });
+    </script>
 </body>
 </html>
