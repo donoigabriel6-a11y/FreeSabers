@@ -101,6 +101,24 @@ void InstallUIHooks() {
                 refresh();
             });
 
+            BSML::Lite::CreateToggle(parent, "Performance mode (Quest)", config.IsPerformanceMode(), [refresh](bool value) {
+                Config::GetInstance().SetPerformanceMode(value);
+                SaberManager::GetInstance().ReapplyPresets();
+                refresh();
+            });
+
+            BSML::Lite::CreateIncrementSetting(parent, "Max trail samples", 1, 4,
+                static_cast<float>(config.GetMaxTrailSamples()), 4.0f, 96.0f, [refresh](float value) {
+                    Config::GetInstance().SetMaxTrailSamples(static_cast<int>(std::lround(value)));
+                    refresh();
+                });
+
+            BSML::Lite::CreateIncrementSetting(parent, "Max spark particles", 1, 8,
+                static_cast<float>(config.GetMaxSparkParticles()), 8.0f, 256.0f, [refresh](float value) {
+                    Config::GetInstance().SetMaxSparkParticles(static_cast<int>(std::lround(value)));
+                    refresh();
+                });
+
             const int presetCount = std::max(1, static_cast<int>(config.GetPresets().size()));
             const float maxIndex = static_cast<float>(presetCount - 1);
 

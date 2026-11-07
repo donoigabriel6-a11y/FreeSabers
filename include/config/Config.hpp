@@ -56,6 +56,18 @@ public:
     bool IsGlowEnabled() const { return glowEnabled; }
     void SetGlowEnabled(bool value);
 
+    // Performance settings
+    int GetMaxTrailSamples() const { return maxTrailSamples; }
+    void SetMaxTrailSamples(int value);
+
+    int GetMaxSparkParticles() const { return maxSparkParticles; }
+    void SetMaxSparkParticles(int value);
+
+    bool IsPerformanceMode() const { return performanceMode; }
+    void SetPerformanceMode(bool value);
+
+    bool IsQuest() const { return isQuest; }
+
 private:
     Config() = default;
     ~Config() = default;
@@ -78,6 +90,12 @@ private:
     bool trailsEnabled = true;
     bool sparksEnabled = true;
     bool glowEnabled = true;
+
+    // Performance settings
+    int maxTrailSamples = 96;
+    int maxSparkParticles = 160;
+    bool performanceMode = false;
+    bool isQuest = false;
 
     int lastImportCount = 0;
     std::string lastImportStatus;

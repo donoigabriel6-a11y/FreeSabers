@@ -1,9 +1,11 @@
 #include "saber/SparkSystem.hpp"
 #include "utils/VisualHelpers.hpp"
 #include "main.hpp"
+#include "config/Config.hpp"
 
 #include "UnityEngine/Camera.hpp"
 #include "UnityEngine/Transform.hpp"
+#include "UnityEngine/Bounds.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -19,7 +21,9 @@ bool SparkSystem::Initialize(const SparkConfig& sparkConfig, UnityEngine::Materi
     tintColor = tint;
     if (!config.enabled || !templateMaterial) return false;
 
-    capacity = std::clamp(config.count, 8, 160);
+    // Use global config for max particles (performance optimization)
+    const int globalMaxParticles = Config::GetInstance().GetMaxSparkParticles();
+    capacity = std::clamp(config.count, 8, globalMaxParticles);
     particles.resize(capacity);
 
     vertices = ArrayW<UnityEngine::Vector3>(capacity * 4);
@@ -46,19 +50,26 @@ bool SparkSystem::Initialize(const SparkConfig& sparkConfig, UnityEngine::Materi
 
     mesh = UnityEngine::Mesh::New_ctor();
     mesh->set_triangles(triangles);
+    mesh->set_bounds(UnityEngine::Bounds(UnityEngine::Vector3{0,0,0}, UnityEngine::Vector3{200,200,200}));
 
     material = Visuals::CloneMaterial(templateMaterial);
     if (!material) {
-        Visuals::SafeDestroy(mesh);
-        mesh = nullptr;
-        return false;
+        // Try fallback material
+        PaperLogger.warn("FreeSabers: failed to clone spark material, trying fallback");
+        material = Visuals::CreateFallbackTrailMaterial();
+        if (!material) {
+            Visuals::SafeDestroy(mesh);
+            mesh = nullptr;
+            return false;
+        }
     }
 
     Visuals::SetColorIfPresent(material, "_Color", UnityEngine::Color{1.0f, 1.0f, 1.0f, 1.0f});
     Visuals::SetIntIfPresent(material, "_Cull", 0);
     Visuals::SetIntIfPresent(material, "_ZWrite", 0);
-    Visuals::SetIntIfPresent(material, "_SrcBlend", 5);
-    Visuals::SetIntIfPresent(material, "_DstBlend", 1);
+    Visuals::SetIntIfPresent(material, "_SrcBlend", 5);   // SrcAlpha
+    Visuals::SetIntIfPresent(material, "_DstBlend", 10);  // OneMinusSrcAlpha (standard alpha blend)
+    Visuals::SetIntIfPresent(material, "_ZTest", 4);
     material->set_renderQueue(3010);
 
     root = Visuals::CreateMeshObject("FreeSabersSparks", nullptr, mesh, material);

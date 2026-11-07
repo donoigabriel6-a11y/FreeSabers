@@ -4,6 +4,7 @@
 
 #include "UnityEngine/Quaternion.hpp"
 #include "UnityEngine/Transform.hpp"
+#include "UnityEngine/Bounds.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -38,16 +39,25 @@ bool DynamicJoints::Initialize(const BoltsConfig& boltsConfig, const TransformOf
 
     mesh = Visuals::BuildBladeMesh(cylinder, jointColor, 1.0f, true);
     if (!mesh) return false;
+    mesh->set_bounds(UnityEngine::Bounds(UnityEngine::Vector3{0,0,0}, UnityEngine::Vector3{200,200,200}));
 
     material = Visuals::CloneMaterial(templateMaterial);
     if (!material) {
-        Visuals::SafeDestroy(mesh);
-        mesh = nullptr;
-        return false;
+        PaperLogger.warn("FreeSabers: failed to clone bolt material, trying fallback");
+        material = Visuals::CreateFallbackTrailMaterial();
+        if (!material) {
+            Visuals::SafeDestroy(mesh);
+            mesh = nullptr;
+            return false;
+        }
     }
     Visuals::SetColorIfPresent(material, "_Color", Visuals::ToUnity(jointColor));
     Visuals::SetColorIfPresent(material, "_EmissionColor", Visuals::ToUnity(jointColor));
     Visuals::SetIntIfPresent(material, "_Cull", 2);
+    Visuals::SetIntIfPresent(material, "_ZWrite", 0);
+    Visuals::SetIntIfPresent(material, "_SrcBlend", 5);
+    Visuals::SetIntIfPresent(material, "_DstBlend", 10);
+    material->set_renderQueue(3002);
 
     root = Visuals::CreateMeshObject("FreeSabersBolts", nullptr, nullptr, nullptr);
     if (!root) {

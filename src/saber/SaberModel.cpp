@@ -2,6 +2,8 @@
 #include "utils/VisualHelpers.hpp"
 #include "main.hpp"
 
+#include "UnityEngine/Bounds.hpp"
+
 namespace FreeSabers {
 
 bool SaberModel::Initialize(UnityEngine::Transform* parent, const BladeConfig& blade, const TransformOffset& offset,
@@ -11,12 +13,17 @@ bool SaberModel::Initialize(UnityEngine::Transform* parent, const BladeConfig& b
     config = blade;
     mesh = Visuals::BuildBladeMesh(config, tint, 1.0f, false);
     if (!mesh) return false;
+    mesh->set_bounds(UnityEngine::Bounds(UnityEngine::Vector3{0,0,0}, UnityEngine::Vector3{200,200,200}));
 
     material = Visuals::CloneMaterial(templateMaterial);
     if (!material) {
-        Visuals::SafeDestroy(mesh);
-        mesh = nullptr;
-        return false;
+        PaperLogger.warn("FreeSabers: failed to clone blade material, trying fallback");
+        material = Visuals::CreateFallbackTrailMaterial();
+        if (!material) {
+            Visuals::SafeDestroy(mesh);
+            mesh = nullptr;
+            return false;
+        }
     }
 
     ApplyMaterial(tint);

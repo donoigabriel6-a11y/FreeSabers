@@ -2,6 +2,8 @@
 #include "utils/VisualHelpers.hpp"
 #include "main.hpp"
 
+#include "UnityEngine/Bounds.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -25,12 +27,17 @@ bool GlowEffect::Initialize(UnityEngine::Transform* parent, const BladeConfig& b
     const float radiusMultiplier = 1.0f + std::clamp(config.radius, 0.0f, 3.0f);
     mesh = Visuals::BuildBladeMesh(bladeConfig, glowColor.WithAlpha(baseAlpha), radiusMultiplier, true);
     if (!mesh) return false;
+    mesh->set_bounds(UnityEngine::Bounds(UnityEngine::Vector3{0,0,0}, UnityEngine::Vector3{200,200,200}));
 
     material = Visuals::CloneMaterial(templateMaterial);
     if (!material) {
-        Visuals::SafeDestroy(mesh);
-        mesh = nullptr;
-        return false;
+        PaperLogger.warn("FreeSabers: failed to clone glow material, trying fallback");
+        material = Visuals::CreateFallbackTrailMaterial();
+        if (!material) {
+            Visuals::SafeDestroy(mesh);
+            mesh = nullptr;
+            return false;
+        }
     }
 
     Visuals::SetColorIfPresent(material, "_Color", Visuals::ToUnity(glowColor.WithAlpha(baseAlpha)));
@@ -40,6 +47,7 @@ bool GlowEffect::Initialize(UnityEngine::Transform* parent, const BladeConfig& b
     Visuals::SetIntIfPresent(material, "_ZWrite", 0);
     Visuals::SetIntIfPresent(material, "_SrcBlend", 5);
     Visuals::SetIntIfPresent(material, "_DstBlend", 10);
+    Visuals::SetIntIfPresent(material, "_ZTest", 4);
     // Render behind the blade so the shell reads as a glow, not a second blade.
     material->set_renderQueue(3001);
 

@@ -3,6 +3,8 @@
 #include "beatsaber-hook/shared/utils/typedefs.h"
 #include "UnityEngine/MeshFilter.hpp"
 #include "UnityEngine/Quaternion.hpp"
+#include "UnityEngine/Shader.hpp"
+#include "main.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -311,6 +313,59 @@ std::string ObjectName(UnityEngine::Object* object) {
     const StringW name = object->get_name();
     if (!name) return {};
     return static_cast<std::string>(name);
+}
+
+UnityEngine::Material* FindTrailMaterial(UnityEngine::Transform* parent, UnityEngine::Material* bladeMaterial) {
+    if (!parent) return bladeMaterial;
+
+    // First, try to find a material with "trail" in name or shader
+    UnityEngine::MeshRenderer* foundRenderer = nullptr;
+    UnityEngine::Material* trailMat = FindSaberMaterial(parent, true, &foundRenderer);
+    if (trailMat) {
+        PaperLogger.info("FreeSabers: found dedicated trail material: %s", ObjectName(trailMat).c_str());
+        return trailMat;
+    }
+
+    // Fallback: try the blade material if it has trail-friendly properties
+    if (bladeMaterial && bladeMaterial->HasProperty(StringW("_MainTex"))) {
+        PaperLogger.info("FreeSabers: using blade material as trail fallback");
+        return bladeMaterial;
+    }
+
+    // Last resort: use blade material anyway
+    PaperLogger.warn("FreeSabers: no suitable trail material found, using blade material");
+    return bladeMaterial;
+}
+
+UnityEngine::Material* CreateFallbackTrailMaterial() {
+    // Try to find the Unity built-in Sprites-Default shader or similar
+    UnityEngine::Shader* shader = UnityEngine::Shader::Find(StringW("Sprites/Default"));
+    if (!shader) {
+        shader = UnityEngine::Shader::Find(StringW("Unlit/Transparent"));
+    }
+    if (!shader) {
+        shader = UnityEngine::Shader::Find(StringW("Legacy Shaders/Transparent/VertexLit"));
+    }
+    if (!shader) {
+        PaperLogger.error("FreeSabers: could not find any suitable fallback shader for trails");
+        return nullptr;
+    }
+
+    auto* material = UnityEngine::Material::New_ctor(shader);
+    if (!material) return nullptr;
+
+    // Configure for trail rendering
+    material->set_renderQueue(3000);
+    Visuals::SetIntIfPresent(material, "_Cull", 0);
+    Visuals::SetIntIfPresent(material, "_ZWrite", 0);
+    Visuals::SetIntIfPresent(material, "_ZTest", 4);
+    Visuals::SetIntIfPresent(material, "_SrcBlend", 5);
+    Visuals::SetIntIfPresent(material, "_DstBlend", 10);
+    Visuals::SetColorIfPresent(material, "_Color", UnityEngine::Color{1.0f, 1.0f, 1.0f, 1.0f});
+
+    PaperLogger.info("FreeSabers: created fallback trail material with shader: %s",
+                     ObjectName(shader).c_str());
+    return material;
 }
 
 } // namespace FreeSabers::Visuals

@@ -19,7 +19,7 @@ public:
     TrailRenderer() = default;
     ~TrailRenderer() = default;
 
-    bool Initialize(const TrailConfig& config, UnityEngine::Material* templateMaterial);
+    bool Initialize(const TrailConfig& config, UnityEngine::Material* templateMaterial, UnityEngine::Material* bladeMaterial = nullptr);
     void Update(float deltaTime, const UnityEngine::Vector3& bottom, const UnityEngine::Vector3& tip,
                 float speed, float driverAlpha);
     void SetVisible(bool visible);

@@ -1,21 +1,28 @@
 #include "saber/TrailRenderer.hpp"
 #include "utils/VisualHelpers.hpp"
 #include "main.hpp"
+#include "config/Config.hpp"
 
 #include "UnityEngine/Camera.hpp"
 #include "UnityEngine/Quaternion.hpp"
 #include "UnityEngine/Transform.hpp"
+#include "UnityEngine/Bounds.hpp"
+#include "UnityEngine/Rendering/ShadowCastingMode.hpp"
+#include "UnityEngine/Rendering/LightProbeUsage.hpp"
+#include "UnityEngine/Rendering/ReflectionProbeUsage.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 namespace FreeSabers {
 
-bool TrailRenderer::Initialize(const TrailConfig& trailConfig, UnityEngine::Material* templateMaterial) {
+bool TrailRenderer::Initialize(const TrailConfig& trailConfig, UnityEngine::Material* templateMaterial, UnityEngine::Material* bladeMaterial) {
     config = trailConfig;
     if (!config.enabled || !templateMaterial) return false;
 
-    maxSamples = std::clamp(static_cast<int>(config.length * 90.0f) + 2, 4, 96);
+    // Use global config for max samples (performance optimization)
+    const int globalMaxSamples = Config::GetInstance().GetMaxTrailSamples();
+    maxSamples = std::clamp(static_cast<int>(config.length * 90.0f) + 2, 4, globalMaxSamples);
 
     vertices = ArrayW<UnityEngine::Vector3>(maxSamples * 2);
     colors = ArrayW<UnityEngine::Color>(maxSamples * 2);
@@ -38,26 +45,56 @@ bool TrailRenderer::Initialize(const TrailConfig& trailConfig, UnityEngine::Mate
 
     mesh = UnityEngine::Mesh::New_ctor();
     mesh->set_triangles(triangles);
+    mesh->set_bounds(UnityEngine::Bounds(UnityEngine::Vector3{0,0,0}, UnityEngine::Vector3{200,200,200}));
 
-    material = Visuals::CloneMaterial(templateMaterial);
+    // Use improved material finding logic
+    UnityEngine::Material* trailTemplate = Visuals::FindTrailMaterial(nullptr, templateMaterial);
+    if (bladeMaterial) {
+        // If we have a specific blade material, prefer it for trail if it has texture
+        if (bladeMaterial->HasProperty(StringW("_MainTex"))) {
+            trailTemplate = bladeMaterial;
+        }
+    }
+    material = Visuals::CloneMaterial(trailTemplate);
     if (!material) {
-        Visuals::SafeDestroy(mesh);
-        mesh = nullptr;
-        return false;
+        // Try fallback material
+        PaperLogger.warn("FreeSabers: failed to clone trail material, trying fallback");
+        material = Visuals::CreateFallbackTrailMaterial();
+        if (!material) {
+            Visuals::SafeDestroy(mesh);
+            mesh = nullptr;
+            return false;
+        }
     }
 
+    // Configure material for trail rendering - use standard particle/trail shader properties
     Visuals::SetColorIfPresent(material, "_Color", UnityEngine::Color{1.0f, 1.0f, 1.0f, 1.0f});
-    Visuals::SetIntIfPresent(material, "_Cull", 0);
-    Visuals::SetIntIfPresent(material, "_ZWrite", 0);
-    Visuals::SetIntIfPresent(material, "_SrcBlend", 5);   // SrcAlpha
-    Visuals::SetIntIfPresent(material, "_DstBlend", config.blendingMode == 1 ? 1 : 10);
-    Visuals::SetIntIfPresent(material, "_ZTest", config.alwaysOnTop ? 8 : 4);
+    Visuals::SetColorIfPresent(material, "_TintColor", UnityEngine::Color{1.0f, 1.0f, 1.0f, 1.0f});
+    Visuals::SetIntIfPresent(material, "_Cull", 0);                    // No culling for billboard trails
+    Visuals::SetIntIfPresent(material, "_ZWrite", 0);                  // Don't write to depth buffer
+    Visuals::SetIntIfPresent(material, "_ZTest", config.alwaysOnTop ? 8 : 4);  // Always or LEqual
 
-    material->set_renderQueue(config.alwaysOnTop ? 4000 : config.renderQueue);
+    // Standard alpha blending: SrcAlpha, OneMinusSrcAlpha
+    Visuals::SetIntIfPresent(material, "_SrcBlend", 5);   // SrcAlpha
+    Visuals::SetIntIfPresent(material, "_DstBlend", 10);  // OneMinusSrcAlpha
+
+    // Some shaders use different property names for blending
+    Visuals::SetIntIfPresent(material, "_BlendOp", 0);    // Add
+    Visuals::SetIntIfPresent(material, "_Blend", 1);      // Enabled
+
+    // Render queue: transparent queue + offset
+    int renderQueue = config.alwaysOnTop ? 4000 : config.renderQueue;
+    material->set_renderQueue(renderQueue);
+
+    // Texture setup
     if (material->HasProperty(StringW("_MainTex"))) {
         material->set_mainTextureScale(Visuals::ToUnity(config.tiling));
         material->set_mainTextureOffset(Visuals::ToUnity(config.uvScroll));
     }
+
+    // Ensure the material supports vertex colors
+    Visuals::SetIntIfPresent(material, "_VertexColor", 1);
+    Visuals::SetIntIfPresent(material, "_UseVertexAlpha", 1);
 
     root = Visuals::CreateMeshObject("FreeSabersTrail_" + config.name, nullptr, mesh, material);
     if (!root) {
@@ -70,13 +107,18 @@ bool TrailRenderer::Initialize(const TrailConfig& trailConfig, UnityEngine::Mate
 
     renderer = root->GetComponent<UnityEngine::MeshRenderer*>();
     if (renderer) {
-        renderer->set_sortingOrder(config.alwaysOnTop ? 4000 : config.renderQueue);
+        renderer->set_sortingOrder(renderQueue);
         renderer->set_enabled(false);
+        renderer->set_receiveShadows(false);
+        renderer->set_shadowCastingMode(UnityEngine::Rendering::ShadowCastingMode::Off);
+        renderer->set_lightProbeUsage(UnityEngine::Rendering::LightProbeUsage::Off);
+        renderer->set_reflectionProbeUsage(UnityEngine::Rendering::ReflectionProbeUsage::Off);
+        renderer->set_allowOcclusionWhenDynamic(false);
     }
 
     initialized = true;
-    PaperLogger.info("FreeSabers: trail '%s' built (%d samples, %.3fs)",
-                     config.name.c_str(), maxSamples, config.length);
+    PaperLogger.info("FreeSabers: trail '%s' built (%d samples, %.3fs, queue=%d)",
+                     config.name.c_str(), maxSamples, config.length, renderQueue);
     return true;
 }
 
@@ -122,6 +164,9 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
     const int used = static_cast<int>(samples.size());
     const UnityEngine::Vector3 trailOffset = Visuals::ToUnity(config.transform.position);
 
+    // UV scroll offset based on time for animated textures
+    const float uvTimeOffset = std::fmod(elapsed * config.uvScroll.y, 1.0f);
+
     for (int i = 0; i < used; ++i) {
         const Sample& sample = samples[i];
         const float age = std::clamp((elapsed - sample.time) / std::max(config.length, 0.001f), 0.0f, 1.0f);
@@ -158,8 +203,11 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
         vertices[index + 1] = right;
         colors[index] = UnityEngine::Color{baseColor.r, baseColor.g, baseColor.b, alpha};
         colors[index + 1] = UnityEngine::Color{baseColor.r, baseColor.g, baseColor.b, alpha};
-        uvs[index] = UnityEngine::Vector2{0.0f, 1.0f - age};
-        uvs[index + 1] = UnityEngine::Vector2{1.0f, 1.0f - age};
+
+        // UV coordinates: X = across trail width (0 to 1), Y = along trail length (0 to 1, with scroll)
+        const float v = (1.0f - age) + uvTimeOffset;
+        uvs[index] = UnityEngine::Vector2{0.0f, v};
+        uvs[index + 1] = UnityEngine::Vector2{1.0f, v};
     }
 
     // Degenerate unused slots so the fixed triangle buffer stays invisible.

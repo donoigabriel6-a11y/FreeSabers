@@ -44,6 +44,12 @@ UnityEngine::Material* CloneMaterial(UnityEngine::Material* source);
 UnityEngine::Material* FindSaberMaterial(UnityEngine::Transform* parent, bool trailMaterial,
                                          UnityEngine::MeshRenderer** outRenderer = nullptr);
 
+// Finds or creates a suitable material for trail rendering, with bladeMaterial as fallback.
+UnityEngine::Material* FindTrailMaterial(UnityEngine::Transform* parent, UnityEngine::Material* bladeMaterial);
+
+// Creates a simple unlit transparent material for trails (fallback when no suitable material found).
+UnityEngine::Material* CreateFallbackTrailMaterial();
+
 void SetColorIfPresent(UnityEngine::Material* material, const char* property, const UnityEngine::Color& color);
 void SetFloatIfPresent(UnityEngine::Material* material, const char* property, float value);
 void SetIntIfPresent(UnityEngine::Material* material, const char* property, int value);

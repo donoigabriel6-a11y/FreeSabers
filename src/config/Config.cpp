@@ -60,6 +60,15 @@ void Config::Initialize(const std::string& dataPath) {
     settingsPath = modDataPath + "/settings.json";
     importLogPath = modDataPath + "/imported.txt";
 
+#ifdef QUEST
+    isQuest = true;
+    performanceMode = true;  // Default to performance mode on Quest
+    maxTrailSamples = 64;
+    maxSparkParticles = 96;
+#else
+    isQuest = false;
+#endif
+
     std::error_code error;
     fs::create_directories(presetDir, error);
     fs::create_directories(importDir, error);
@@ -147,12 +156,16 @@ void Config::CreateDefaultPreset() {
     bladeTrail.width = 0.03f;
     bladeTrail.speedWidth = 0.05f;
     bladeTrail.speedAlpha = 0.35f;
+    bladeTrail.blendingMode = 0;
+    bladeTrail.minVertexDistance = 0.004f;
     bladeTrail.colorOverAge.points = {
         {0.0f, Color(0.4f, 0.95f, 1.0f, 1.0f)},
+        {0.5f, Color(0.1f, 0.7f, 1.0f, 0.6f)},
         {1.0f, Color(0.0f, 0.25f, 0.6f, 0.0f)},
     };
-    bladeTrail.alphaOverAge.points = {{0.0f, 1.0f}, {1.0f, 0.0f}};
-    bladeTrail.widthOverAge.points = {{0.0f, 1.0f}, {1.0f, 0.15f}};
+    bladeTrail.alphaOverAge.points = {{0.0f, 1.0f}, {0.5f, 0.6f}, {1.0f, 0.0f}};
+    bladeTrail.widthOverAge.points = {{0.0f, 1.0f}, {0.3f, 0.8f}, {1.0f, 0.15f}};
+    bladeTrail.renderQueue = 3000;
     preset.trails.push_back(bladeTrail);
 
     TrailConfig tipTrail;
@@ -161,11 +174,16 @@ void Config::CreateDefaultPreset() {
     tipTrail.length = 0.16f;
     tipTrail.width = 0.035f;
     tipTrail.speedWidth = 0.04f;
+    tipTrail.blendingMode = 0;
+    tipTrail.minVertexDistance = 0.003f;
     tipTrail.colorOverAge.points = {
         {0.0f, Color(1.0f, 1.0f, 1.0f, 1.0f)},
+        {0.5f, Color(0.3f, 0.8f, 1.0f, 0.5f)},
         {1.0f, Color(0.1f, 0.6f, 1.0f, 0.0f)},
     };
-    tipTrail.alphaOverAge.points = {{0.0f, 1.0f}, {1.0f, 0.0f}};
+    tipTrail.alphaOverAge.points = {{0.0f, 1.0f}, {0.5f, 0.5f}, {1.0f, 0.0f}};
+    tipTrail.widthOverAge.points = {{0.0f, 1.0f}, {1.0f, 0.2f}};
+    tipTrail.renderQueue = 3001;
     preset.trails.push_back(tipTrail);
 
     preset.sparks.enabled = true;
@@ -502,6 +520,9 @@ void Config::LoadSettings() {
     trailsEnabled = Json::Bool(document, "trails", trailsEnabled);
     sparksEnabled = Json::Bool(document, "sparks", sparksEnabled);
     glowEnabled = Json::Bool(document, "glow", glowEnabled);
+    maxTrailSamples = Json::Int(document, "maxTrailSamples", maxTrailSamples);
+    maxSparkParticles = Json::Int(document, "maxSparkParticles", maxSparkParticles);
+    performanceMode = Json::Bool(document, "performanceMode", performanceMode);
     activeLeftPreset = Json::String(document, "left", activeLeftPreset);
     activeRightPreset = Json::String(document, "right", activeRightPreset);
 }
@@ -518,6 +539,12 @@ void Config::SaveSettings() {
     writer.Bool(sparksEnabled);
     writer.Key("glow");
     writer.Bool(glowEnabled);
+    writer.Key("maxTrailSamples");
+    writer.Int(maxTrailSamples);
+    writer.Key("maxSparkParticles");
+    writer.Int(maxSparkParticles);
+    writer.Key("performanceMode");
+    writer.Bool(performanceMode);
     writer.Key("left");
     writer.String(activeLeftPreset.c_str());
     writer.Key("right");
@@ -546,6 +573,21 @@ void Config::SetSparksEnabled(bool value) {
 
 void Config::SetGlowEnabled(bool value) {
     glowEnabled = value;
+    SaveSettings();
+}
+
+void Config::SetMaxTrailSamples(int value) {
+    maxTrailSamples = std::clamp(value, 8, 256);
+    SaveSettings();
+}
+
+void Config::SetMaxSparkParticles(int value) {
+    maxSparkParticles = std::clamp(value, 16, 512);
+    SaveSettings();
+}
+
+void Config::SetPerformanceMode(bool value) {
+    performanceMode = value;
     SaveSettings();
 }
 

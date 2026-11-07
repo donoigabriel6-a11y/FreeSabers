@@ -142,7 +142,8 @@ void SaberManager::BuildVisuals(Instance& instance) {
     for (const auto& trailConfig : instance.preset.trails) {
         if (!trailConfig.enabled) continue;
         auto trail = std::make_unique<TrailRenderer>();
-        if (trail->Initialize(trailConfig, trailMaterial)) {
+        // Pass bladeMaterial as fallback for improved material finding
+        if (trail->Initialize(trailConfig, trailMaterial, bladeMaterial)) {
             instance.trails.push_back(std::move(trail));
         }
     }
