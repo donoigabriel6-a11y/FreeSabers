@@ -98,6 +98,11 @@
       "id": "zip",
       "versionRange": "^1.7.4",
       "additionalData": {}
+    },
+    {
+      "id": "fmt",
+      "versionRange": "^11.0.0",
+      "additionalData": {}
     }
   ]
 }

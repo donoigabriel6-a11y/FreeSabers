@@ -1,13 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/QuestPackageManager/QPM.Package/refs/heads/main/qpm.shared.schema.json",
   "config": {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "sharedDir": "shared",
     "dependenciesDir": "extern",
     "info": {
       "name": "FreeSabers",
       "id": "FreeSabers",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "url": null,
       "additionalData": {
         "overrideSoName": "libFreeSabers.so",
@@ -105,6 +105,11 @@
       {
         "id": "zip",
         "versionRange": "^1.7.4",
+        "additionalData": {}
+      },
+      {
+        "id": "fmt",
+        "versionRange": "^11.0.0",
         "additionalData": {}
       }
     ]
