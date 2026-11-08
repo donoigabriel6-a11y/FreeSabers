@@ -34,6 +34,13 @@ struct Color {
     static Color FromHSV(float h, float s, float v, float a = 1.0f);
     Color WithAlpha(float newAlpha) const { return Color(r, g, b, newAlpha); }
     Color MultiplyRGB(float scale) const { return Color(r * scale, g * scale, b * scale, a); }
+
+    bool operator==(const Color& other) const {
+        return r == other.r && g == other.g && b == other.b && a == other.a;
+    }
+    bool operator!=(const Color& other) const {
+        return !(*this == other);
+    }
 };
 
 // ============================================================================
@@ -103,6 +110,48 @@ struct ColorOverride {
 };
 
 // ============================================================================
+// Drivers
+// ============================================================================
+
+// Driver types follow the ReeSabers valueType enum.
+enum class DriverType : int {
+    None = 0,
+    TipVelocity = 1,
+    SwingsPerSecond = 2,
+    TimeDependence = 3,
+    TipAcceleration = 4,
+    AngularVelocity = 5,
+    ScorePercentage = 6,
+    Combo = 7,
+    Misses = 8,
+    Energy = 9,
+    Multiplier = 10,
+    CutScore = 11,
+    Accuracy = 12,
+    PreCutScore = 13,
+    PostCutScore = 14,
+    CutsPerSecond = 15,
+    TimeAfterCut = 16,
+    DirectionX = 17,
+    DirectionY = 18,
+    DirectionZ = 19
+};
+
+struct MaterialDriver {
+    std::string name;
+    int valueType = 0;
+    float increaseResistance = 0.0f;
+    float decreaseResistance = 0.0f;
+    Curve valueOverValue;
+    ColorCurve colorOverValue;
+    float valueFrom = 0.0f;
+    float valueTo = 1.0f;
+
+    float EvaluateValue(float raw) const;
+    Color EvaluateColor(float raw) const;
+};
+
+// ============================================================================
 // Blade
 // ============================================================================
 
@@ -154,6 +203,9 @@ struct BladeConfig {
     Curve handleMask;
     int bladeMaskResolution = 48;
 
+    // Drivers (per-blade, evaluated per-frame and applied to material).
+    std::vector<MaterialDriver> drivers;
+
     // Textures (tiling / scrolling only; custom textures are not imported).
     Vec2 tiling = Vec2(1.0f, 1.0f);
     Vec2 uvScroll = Vec2(0.0f, 0.0f);
@@ -204,7 +256,7 @@ struct TrailConfig {
     Vec2 uvScroll = Vec2(0.0f, 0.0f);
 
     TransformOffset transform;
-    std::vector<struct MaterialDriver> drivers;
+    std::vector<MaterialDriver> drivers;
 
     bool IsTipTrail() const { return trailType == 0; }
 };
@@ -256,6 +308,9 @@ struct SparkConfig {
 
     TransformOffset transform;
 
+    // Drivers (per-spark-system, evaluated per-frame and modulating particle properties).
+    std::vector<MaterialDriver> drivers;
+
     bool useTexture = false;
     std::string texturePath;
 };
@@ -273,48 +328,6 @@ struct BoltsConfig {
     float damping = 8.0f;
     float gravityY = -1.5f;
     Color color = Color(1.0f, 1.0f, 1.0f, 1.0f);
-};
-
-// ============================================================================
-// Drivers
-// ============================================================================
-
-// Driver types follow the ReeSabers valueType enum.
-enum class DriverType : int {
-    None = 0,
-    TipVelocity = 1,
-    SwingsPerSecond = 2,
-    TimeDependence = 3,
-    TipAcceleration = 4,
-    AngularVelocity = 5,
-    ScorePercentage = 6,
-    Combo = 7,
-    Misses = 8,
-    Energy = 9,
-    Multiplier = 10,
-    CutScore = 11,
-    Accuracy = 12,
-    PreCutScore = 13,
-    PostCutScore = 14,
-    CutsPerSecond = 15,
-    TimeAfterCut = 16,
-    DirectionX = 17,
-    DirectionY = 18,
-    DirectionZ = 19
-};
-
-struct MaterialDriver {
-    std::string name;
-    int valueType = 0;
-    float increaseResistance = 0.0f;
-    float decreaseResistance = 0.0f;
-    Curve valueOverValue;
-    ColorCurve colorOverValue;
-    float valueFrom = 0.0f;
-    float valueTo = 1.0f;
-
-    float EvaluateValue(float raw) const;
-    Color EvaluateColor(float raw) const;
 };
 
 // ============================================================================

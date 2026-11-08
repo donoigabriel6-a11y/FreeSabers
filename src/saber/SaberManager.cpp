@@ -10,6 +10,9 @@
 
 #include "GlobalNamespace/Saber.hpp"
 #include "GlobalNamespace/SaberTrail.hpp"
+#include "GlobalNamespace/ScoreController.hpp"
+#include "GlobalNamespace/GameEnergyCounter.hpp"
+#include "GlobalNamespace/ComboController.hpp"
 #include "UnityEngine/GameObject.hpp"
 #include "UnityEngine/Object.hpp"
 #include "UnityEngine/Transform.hpp"
@@ -18,6 +21,12 @@
 #include <cmath>
 
 namespace FreeSabers {
+
+// Static gameplay state shared across all instances
+static int s_globalMultiplier = 1;
+static int s_globalMisses = 0;
+static float s_globalCutsPerSecond = 0.0f;
+static float s_globalAccuracy = 0.5f;
 
 SaberManager& SaberManager::GetInstance() {
     static SaberManager instance;
@@ -272,18 +281,25 @@ float SaberManager::EvaluateDriver(int valueType, const Instance& instance, cons
         case DriverType::DirectionZ:
             return direction.z;
         case DriverType::ScorePercentage:
+            return std::clamp(instance.scorePercentage, 0.0f, 1.0f);
         case DriverType::Accuracy:
-            return 0.5f;
+            return std::clamp(instance.accuracy, 0.0f, 1.0f);
         case DriverType::Energy:
-            return 0.75f;
+            return std::clamp(instance.energy, 0.0f, 1.0f);
         case DriverType::Multiplier:
-            return 1.0f;
+            return static_cast<float>(instance.multiplier);
         case DriverType::Combo:
+            return static_cast<float>(instance.combo);
         case DriverType::CutsPerSecond:
+            return instance.cutsPerSecond;
         case DriverType::CutScore:
+            return static_cast<float>(instance.cutScore);
         case DriverType::PreCutScore:
+            return static_cast<float>(instance.preCutScore);
         case DriverType::PostCutScore:
+            return static_cast<float>(instance.postCutScore);
         case DriverType::Misses:
+            return static_cast<float>(instance.misses);
         case DriverType::None:
         default:
             return 0.0f;
@@ -293,6 +309,9 @@ float SaberManager::EvaluateDriver(int valueType, const Instance& instance, cons
 void SaberManager::Update(float deltaTime) {
     const float dt = std::clamp(deltaTime, 0.0f, 0.1f);
     const float safeDt = std::max(dt, 1.0f / 240.0f);
+
+    // Update gameplay state from ScoreController
+    UpdateGameplayState();
 
     for (auto it = sabers.begin(); it != sabers.end();) {
         Instance& instance = it->second;
@@ -320,7 +339,14 @@ void SaberManager::Update(float deltaTime) {
             tint = blade.colorOverride.Evaluate(instance.time);
         }
 
-        if (instance.blade) instance.blade->Update(dt, tint);
+        // Evaluate blade drivers
+        float bladeDriverValue = 1.0f;
+        for (const auto& driver : blade.drivers) {
+            const float raw = EvaluateDriver(driver.valueType, instance, direction);
+            bladeDriverValue *= std::clamp(driver.EvaluateValue(raw), 0.0f, 2.0f);
+        }
+
+        if (instance.blade) instance.blade->Update(dt, tint, bladeDriverValue);
 
         if (instance.glow) {
             instance.glow->Update(dt, tint);
@@ -336,7 +362,19 @@ void SaberManager::Update(float deltaTime) {
         }
 
         if (instance.sparks) {
-            instance.sparks->Update(dt, tip, tint, instance.speed);
+            // Evaluate spark drivers
+            float sparkDriverValue = 1.0f;
+            Color sparkDriverColor(1.0f, 1.0f, 1.0f, 1.0f);
+            for (const auto& driver : instance.preset.sparks.drivers) {
+                const float raw = EvaluateDriver(driver.valueType, instance, direction);
+                const float evaluatedValue = driver.EvaluateValue(raw);
+                sparkDriverValue *= std::clamp(evaluatedValue, 0.0f, 2.0f);
+
+                if (!driver.colorOverValue.Empty()) {
+                    sparkDriverColor = Color::Lerp(sparkDriverColor, driver.EvaluateColor(raw), 0.5f);
+                }
+            }
+            instance.sparks->Update(dt, tip, tint, instance.speed, sparkDriverValue, sparkDriverColor);
         }
 
         if (instance.bolts) {
@@ -347,13 +385,97 @@ void SaberManager::Update(float deltaTime) {
     }
 }
 
-void SaberManager::OnNoteCut(GlobalNamespace::SaberType saberType, float strength) {
+void SaberManager::UpdateGameplayState() {
+    // Read gameplay state directly from controllers
+    static GlobalNamespace::ScoreController* scoreController = nullptr;
+    static GlobalNamespace::GameEnergyCounter* gameEnergyCounter = nullptr;
+    static GlobalNamespace::ComboController* comboController = nullptr;
+
+    if (!scoreController) {
+        auto controllers = UnityEngine::Object::FindObjectsOfType<GlobalNamespace::ScoreController*>();
+        if (controllers) {
+            for (size_t i = 0; i < controllers.size(); ++i) {
+                if (controllers[i]) {
+                    scoreController = controllers[i];
+                    break;
+                }
+            }
+        }
+    }
+    if (!gameEnergyCounter) {
+        auto counters = UnityEngine::Object::FindObjectsOfType<GlobalNamespace::GameEnergyCounter*>();
+        if (counters) {
+            for (size_t i = 0; i < counters.size(); ++i) {
+                if (counters[i]) {
+                    gameEnergyCounter = counters[i];
+                    break;
+                }
+            }
+        }
+    }
+    if (!comboController) {
+        auto controllers = UnityEngine::Object::FindObjectsOfType<GlobalNamespace::ComboController*>();
+        if (controllers) {
+            for (size_t i = 0; i < controllers.size(); ++i) {
+                if (controllers[i]) {
+                    comboController = controllers[i];
+                    break;
+                }
+            }
+        }
+    }
+
+    for (auto& [model, instance] : sabers) {
+        if (!Visuals::IsAlive(instance.parent)) continue;
+
+        if (scoreController) {
+            instance.cutScore = scoreController->get_multipliedScore();
+            instance.preCutScore = 0; // Not directly available
+            instance.postCutScore = instance.cutScore;
+            instance.multiplier = s_globalMultiplier;
+            const int maxScore = scoreController->get_immediateMaxPossibleMultipliedScore();
+            instance.scorePercentage = maxScore > 0 ? static_cast<float>(instance.cutScore) / static_cast<float>(maxScore) : 0.0f;
+        }
+
+        if (gameEnergyCounter) {
+            instance.energy = std::clamp(gameEnergyCounter->get_energy(), 0.0f, 1.0f);
+        }
+
+        if (comboController) {
+            instance.combo = comboController->__cordl_internal_get__combo();
+        }
+
+        instance.misses = s_globalMisses;
+        instance.cutsPerSecond = s_globalCutsPerSecond;
+        instance.accuracy = s_globalAccuracy;
+    }
+}
+
+void SaberManager::SetGlobalMultiplier(int multiplier) {
+    s_globalMultiplier = std::max(1, multiplier);
+}
+
+void SaberManager::IncrementMisses() {
+    s_globalMisses++;
+}
+
+void SaberManager::UpdateCutsPerSecond(float cps) {
+    s_globalCutsPerSecond = cps;
+}
+
+void SaberManager::UpdateAccuracy(float accuracy) {
+    s_globalAccuracy = std::clamp(accuracy, 0.0f, 1.0f);
+}
+
+void SaberManager::OnNoteCut(GlobalNamespace::SaberType saberType, const GlobalNamespace::NoteCutInfo& noteCutInfo) {
     const bool isLeft = saberType == GlobalNamespace::SaberType::SaberA;
+    const float strength = noteCutInfo.saberSpeed; // Use saber speed as strength indicator
     for (auto& [model, instance] : sabers) {
         if (instance.isLeft != isLeft || !Visuals::IsAlive(instance.parent) || !instance.preset.blade.enabled) continue;
 
         instance.timeSinceCut = 0.0f;
         if (instance.glow) instance.glow->PulseOnCut(strength);
+        // combo is tracked by ComboController in UpdateGameplayState
 
         if (instance.sparks && Config::GetInstance().AreSparksEnabled() && Config::GetInstance().IsEnabled()) {
             const BladeConfig& blade = instance.preset.blade;
@@ -363,6 +485,10 @@ void SaberManager::OnNoteCut(GlobalNamespace::SaberType saberType, float strengt
             instance.sparks->Emit(tip, direction, strength);
         }
     }
+}
+
+void SaberManager::OnNoteMissed() {
+    // misses and combo are tracked in UpdateGameplayState
 }
 
 void SaberManager::OnLevelStart() {

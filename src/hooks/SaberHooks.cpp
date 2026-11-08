@@ -8,9 +8,11 @@
 #include "GlobalNamespace/ScoreController.hpp"
 #include "GlobalNamespace/NoteController.hpp"
 #include "GlobalNamespace/NoteCutInfo.hpp"
+#include "GlobalNamespace/NoteData.hpp"
 #include "GlobalNamespace/ColorManager.hpp"
 #include "GlobalNamespace/GameplayCoreInstaller.hpp"
 #include "GlobalNamespace/AudioTimeSyncController.hpp"
+#include "GlobalNamespace/ComboController.hpp"
 #include "UnityEngine/Color.hpp"
 #include "UnityEngine/Transform.hpp"
 
@@ -27,8 +29,13 @@ MAKE_HOOK_MATCH(ScoreController_HandleNoteWasCut, &GlobalNamespace::ScoreControl
                 GlobalNamespace::ScoreController* self, GlobalNamespace::NoteController* noteController,
                 ByRef<GlobalNamespace::NoteCutInfo> noteCutInfo) {
     ScoreController_HandleNoteWasCut(self, noteController, noteCutInfo);
-    (void)noteController;
-    SaberManager::GetInstance().OnNoteCut(noteCutInfo->saberType, 1.0f);
+    SaberManager::GetInstance().OnNoteCut(noteCutInfo->saberType, *noteCutInfo);
+}
+
+MAKE_HOOK_MATCH(ScoreController_HandleNoteWasMissed, &GlobalNamespace::ScoreController::HandleNoteWasMissed, void,
+                GlobalNamespace::ScoreController* self, GlobalNamespace::NoteController* noteController) {
+    ScoreController_HandleNoteWasMissed(self, noteController);
+    SaberManager::GetInstance().OnNoteMissed();
 }
 
 MAKE_HOOK_MATCH(GameplayCoreInstaller_InstallBindings, &GlobalNamespace::GameplayCoreInstaller::InstallBindings, void,
@@ -61,6 +68,7 @@ void InstallSaberHooks() {
 
     INSTALL_HOOK(PaperLogger, SaberModelController_Init);
     INSTALL_HOOK(PaperLogger, ScoreController_HandleNoteWasCut);
+    INSTALL_HOOK(PaperLogger, ScoreController_HandleNoteWasMissed);
     INSTALL_HOOK(PaperLogger, GameplayCoreInstaller_InstallBindings);
     INSTALL_HOOK(PaperLogger, AudioTimeSyncController_OnDestroy);
     INSTALL_HOOK(PaperLogger, ColorManager_ColorForSaberType);

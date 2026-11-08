@@ -17,7 +17,7 @@ public:
     bool Initialize(UnityEngine::Transform* parent, const BladeConfig& blade, const TransformOffset& offset,
                     const Color& tint, UnityEngine::Material* templateMaterial);
 
-    void Update(float deltaTime, const Color& tint);
+    void Update(float deltaTime, const Color& tint, float driverValue);
     // World-space point along the blade (local Z is transformed by the preset offset).
     UnityEngine::Vector3 GetPoint(float z) const;
     void SetVisible(bool visible);
@@ -36,6 +36,7 @@ private:
     float time = 0.0f;
 
     void ApplyMaterial(const Color& tint);
+    void ApplyDrivers(const std::vector<MaterialDriver>& drivers, float rawValue, const Color& baseColor);
 };
 
 } // namespace FreeSabers

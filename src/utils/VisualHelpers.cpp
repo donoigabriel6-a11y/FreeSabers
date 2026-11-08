@@ -4,12 +4,15 @@
 #include "UnityEngine/MeshFilter.hpp"
 #include "UnityEngine/Quaternion.hpp"
 #include "UnityEngine/Shader.hpp"
+#include "UnityEngine/Texture2D.hpp"
 #include "main.hpp"
 
 #include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <vector>
+#include <filesystem>
+#include <fstream>
 
 namespace FreeSabers::Visuals {
 
@@ -366,6 +369,61 @@ UnityEngine::Material* CreateFallbackTrailMaterial() {
     PaperLogger.info("FreeSabers: created fallback trail material with shader: %s",
                      ObjectName(shader).c_str());
     return material;
+}
+
+UnityEngine::Texture2D* LoadTextureFromFile(const std::string& path) {
+    if (path.empty()) return nullptr;
+
+    std::filesystem::path fsPath(path);
+    if (!std::filesystem::exists(fsPath)) {
+        // Try relative to ModData/FreeSabers/Textures
+        std::string altPath = "/sdcard/ModData/com.beatgames.beatsaber/Mods/FreeSabers/Textures/" + fsPath.filename().string();
+        if (!std::filesystem::exists(altPath)) {
+            PaperLogger.warn("FreeSabers: texture not found at %s or %s", path.c_str(), altPath.c_str());
+            return nullptr;
+        }
+        fsPath = altPath;
+    }
+
+    // Read file into memory
+    std::ifstream file(fsPath, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        PaperLogger.warn("FreeSabers: failed to open texture file %s", fsPath.string().c_str());
+        return nullptr;
+    }
+
+    size_t fileSize = static_cast<size_t>(file.tellg());
+    file.seekg(0, std::ios::beg);
+
+    std::vector<uint8_t> fileData(fileSize);
+    file.read(reinterpret_cast<char*>(fileData.data()), fileSize);
+    file.close();
+
+    if (fileData.empty()) {
+        PaperLogger.warn("FreeSabers: texture file is empty %s", fsPath.string().c_str());
+        return nullptr;
+    }
+
+    // Create texture and load raw data (Unity decodes PNG/JPG automatically)
+    // Use simple constructor without format (will default to RGBA32)
+    auto* texture = UnityEngine::Texture2D::New_ctor(2, 2);
+    if (!texture) {
+        PaperLogger.warn("FreeSabers: failed to create Texture2D");
+        return nullptr;
+    }
+
+    // Load raw texture data
+    ArrayW<uint8_t> data(fileData.size());
+    for (size_t i = 0; i < fileData.size(); ++i) {
+        data[i] = fileData[i];
+    }
+    texture->LoadRawTextureData(data);
+    texture->Apply();
+
+    texture->set_name(fsPath.filename().string());
+    PaperLogger.info("FreeSabers: loaded texture %s (%dx%d)",
+                     fsPath.string().c_str(), texture->get_width(), texture->get_height());
+    return texture;
 }
 
 } // namespace FreeSabers::Visuals

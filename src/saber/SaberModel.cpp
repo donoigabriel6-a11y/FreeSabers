@@ -1,6 +1,7 @@
 #include "saber/SaberModel.hpp"
 #include "utils/VisualHelpers.hpp"
 #include "main.hpp"
+#include "config/SaberConfig.hpp"
 
 #include "UnityEngine/Bounds.hpp"
 
@@ -83,9 +84,48 @@ void SaberModel::ApplyMaterial(const Color& tint) {
     Visuals::SetColorIfPresent(material, "_EnvLightColor", Visuals::ToUnity(config.envLightColor));
     Visuals::SetColorIfPresent(material, "_HandleColor", Visuals::ToUnity(config.handleColor));
     Visuals::SetFloatIfPresent(material, "_HandleRoughness", config.handleRoughness);
+
+    // Additional material properties from ReeSabers
+    Visuals::SetFloatIfPresent(material, "_SceneReflections", config.sceneReflections ? 1.0f : 0.0f);
+    Visuals::SetFloatIfPresent(material, "_SceneLights", config.sceneLights ? 1.0f : 0.0f);
+    Visuals::SetFloatIfPresent(material, "_NormalMapIntensity", config.normalMapIntensity);
+    Visuals::SetFloatIfPresent(material, "_ReflectionIntensity", config.reflectionIntensity);
+    Visuals::SetFloatIfPresent(material, "_EnvLightIntensity", config.envLightIntensity);
+
+    // Texture loading
+    if (config.useTexture && !config.texturePath.empty() && material->HasProperty(StringW("_MainTex"))) {
+        UnityEngine::Texture2D* texture = Visuals::LoadTextureFromFile(config.texturePath);
+        if (texture) {
+            material->SetTexture(StringW("_MainTex"), texture);
+            material->set_mainTextureScale(Visuals::ToUnity(config.tiling));
+            material->set_mainTextureOffset(Visuals::ToUnity(config.uvScroll));
+        }
+    }
 }
 
-void SaberModel::Update(float deltaTime, const Color& tint) {
+void SaberModel::ApplyDrivers(const std::vector<MaterialDriver>& drivers, float rawValue, const Color& baseColor) {
+    if (!material || drivers.empty()) return;
+
+    float driverValue = 1.0f;
+    Color driverColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    for (const auto& driver : drivers) {
+        const float evaluatedValue = driver.EvaluateValue(rawValue);
+        driverValue *= std::clamp(evaluatedValue, 0.0f, 2.0f);
+
+        if (!driver.colorOverValue.Empty()) {
+            driverColor = Color::Lerp(driverColor, driver.EvaluateColor(rawValue), 0.5f);
+        }
+    }
+
+    // Apply driver value as a multiplier to emission/alpha
+    Visuals::SetFloatIfPresent(material, "_DriverValue", driverValue);
+    if (driverColor != Color(1.0f, 1.0f, 1.0f, 1.0f)) {
+        Visuals::SetColorIfPresent(material, "_DriverColor", Visuals::ToUnity(driverColor));
+    }
+}
+
+void SaberModel::Update(float deltaTime, const Color& tint, float driverValue) {
     if (!initialized || !material) return;
     time += deltaTime;
 
@@ -98,6 +138,9 @@ void SaberModel::Update(float deltaTime, const Color& tint) {
         // Keep the material in sync if the caller supplied a different tint.
         (void)tint;
     }
+
+    // Evaluate and apply blade drivers
+    ApplyDrivers(config.drivers, driverValue, config.baseColor);
 
     if (config.useTexture && material->HasProperty(StringW("_MainTex"))) {
         material->set_mainTextureScale(Visuals::ToUnity(config.tiling));

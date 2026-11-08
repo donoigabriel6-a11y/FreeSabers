@@ -21,7 +21,8 @@ public:
     ~SparkSystem() = default;
 
     bool Initialize(const SparkConfig& config, UnityEngine::Material* templateMaterial, const Color& tint);
-    void Update(float deltaTime, const UnityEngine::Vector3& tip, const Color& tint, float speed);
+    void Update(float deltaTime, const UnityEngine::Vector3& tip, const Color& tint, float speed,
+                float driverValue, const Color& driverColor);
     void Emit(const UnityEngine::Vector3& position, const UnityEngine::Vector3& direction, float strength);
     void SetVisible(bool visible);
     void Dispose();
@@ -59,7 +60,8 @@ private:
 
     float Random01();
     Particle* AcquireParticle();
-    void WriteBuffers(const UnityEngine::Vector3& cameraRight, const UnityEngine::Vector3& cameraUp);
+    void WriteBuffers(const UnityEngine::Vector3& cameraRight, const UnityEngine::Vector3& cameraUp,
+                      float driverValue, const Color& driverColor);
 };
 
 } // namespace FreeSabers

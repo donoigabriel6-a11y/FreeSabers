@@ -7,6 +7,7 @@
 #include "UnityEngine/Mesh.hpp"
 #include "UnityEngine/MeshRenderer.hpp"
 #include "UnityEngine/Object.hpp"
+#include "UnityEngine/Texture2D.hpp"
 #include "UnityEngine/Transform.hpp"
 #include "UnityEngine/Vector2.hpp"
 #include "UnityEngine/Vector3.hpp"
@@ -60,5 +61,8 @@ void SafeDestroy(UnityEngine::Object* object);
 void ApplyTransform(UnityEngine::Transform* transform, const TransformOffset& offset);
 
 std::string ObjectName(UnityEngine::Object* object);
+
+// Loads a texture from a file path. Returns nullptr on failure.
+UnityEngine::Texture2D* LoadTextureFromFile(const std::string& path);
 
 } // namespace FreeSabers::Visuals

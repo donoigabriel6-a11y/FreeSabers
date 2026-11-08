@@ -5,6 +5,7 @@
 
 #include "UnityEngine/Camera.hpp"
 #include "UnityEngine/Transform.hpp"
+#include "UnityEngine/Quaternion.hpp"
 #include "UnityEngine/Bounds.hpp"
 
 #include <algorithm>
@@ -72,6 +73,14 @@ bool SparkSystem::Initialize(const SparkConfig& sparkConfig, UnityEngine::Materi
     Visuals::SetIntIfPresent(material, "_ZTest", 4);
     material->set_renderQueue(3010);
 
+    // Texture loading for sparks
+    if (config.useTexture && !config.texturePath.empty() && material->HasProperty(StringW("_MainTex"))) {
+        UnityEngine::Texture2D* texture = Visuals::LoadTextureFromFile(config.texturePath);
+        if (texture) {
+            material->SetTexture(StringW("_MainTex"), texture);
+        }
+    }
+
     root = Visuals::CreateMeshObject("FreeSabersSparks", nullptr, mesh, material);
     if (!root) {
         Visuals::SafeDestroy(material);
@@ -124,6 +133,11 @@ void SparkSystem::Emit(const UnityEngine::Vector3& position, const UnityEngine::
 
     const UnityEngine::Vector3 baseDirection = Visuals::Normalize(direction);
 
+    // Precompute transform for particle positions
+    const UnityEngine::Vector3 transformPos = Visuals::ToUnity(config.transform.position);
+    const UnityEngine::Quaternion transformRot = UnityEngine::Quaternion::Euler(Visuals::ToUnity(config.transform.rotation));
+    const UnityEngine::Vector3 transformScale = Visuals::ToUnity(config.transform.scale);
+
     for (int i = 0; i < burst; ++i) {
         Particle* particle = AcquireParticle();
         if (!particle) return;
@@ -142,23 +156,31 @@ void SparkSystem::Emit(const UnityEngine::Vector3& position, const UnityEngine::
         particle->lifetime = std::max(0.02f, config.minLifetime +
                                               (config.maxLifetime - config.minLifetime) * Random01());
         particle->seed = Random01() * 100.0f;
-        particle->position = Visuals::Add(position, Visuals::Scale(randomDirection, config.size * 0.5f * Random01()));
+
+        // Apply transform to initial position
+        UnityEngine::Vector3 localPos = Visuals::Add(position, Visuals::Scale(randomDirection, config.size * 0.5f * Random01()));
+        if (!config.transform.IsIdentity()) {
+            localPos = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(localPos, transformPos)), transformScale.x));
+        }
+        particle->position = localPos;
         particle->velocity = Visuals::Scale(direction2, config.velocity * (0.55f + Random01() * 0.9f));
     }
 }
 
-void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const Color& tint, float speed) {
+void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const Color& tint, float speed,
+                         float driverValue, const Color& driverColor) {
     if (!initialized || !config.enabled) return;
 
     elapsed += deltaTime;
     const float dt = std::min(deltaTime, 0.05f);
 
+    // Apply driver value to emission rate
     if (config.emissionMode == 2 && speed > 1.2f) {
-        emitTimer += dt;
+        emitTimer += dt * driverValue;
         const float period = std::max(config.triggerPeriod, 0.02f);
         while (emitTimer >= period) {
             emitTimer -= period;
-            Emit(tip, UnityEngine::Vector3{0.0f, 0.0f, 1.0f}, std::min(1.0f, speed * 0.25f));
+            Emit(tip, UnityEngine::Vector3{0.0f, 0.0f, 1.0f}, std::min(1.0f, speed * 0.25f) * driverValue);
         }
     }
 
@@ -203,11 +225,18 @@ void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const
     }
 
     tintColor = tint;
-    WriteBuffers(cameraRight, cameraUp);
+    WriteBuffers(cameraRight, cameraUp, driverValue, driverColor);
     if (renderer) renderer->set_enabled(true);
 }
 
-void SparkSystem::WriteBuffers(const UnityEngine::Vector3& cameraRight, const UnityEngine::Vector3& cameraUp) {
+void SparkSystem::WriteBuffers(const UnityEngine::Vector3& cameraRight, const UnityEngine::Vector3& cameraUp,
+                               float driverValue, const Color& driverColor) {
+    // Precompute transform for vertex positions
+    const UnityEngine::Vector3 transformPos = Visuals::ToUnity(config.transform.position);
+    const UnityEngine::Quaternion transformRot = UnityEngine::Quaternion::Euler(Visuals::ToUnity(config.transform.rotation));
+    const UnityEngine::Vector3 transformScale = Visuals::ToUnity(config.transform.scale);
+    const bool hasTransform = !config.transform.IsIdentity();
+
     for (int i = 0; i < capacity; ++i) {
         const Particle& particle = particles[i];
         const int base = i * 4;
@@ -232,16 +261,36 @@ void SparkSystem::WriteBuffers(const UnityEngine::Vector3& cameraRight, const Un
             color.b = tintColor.b;
         }
 
-        const float alpha = std::clamp(color.a * alphaCurve * (1.0f - lifeT * 0.35f), 0.0f, 1.0f);
-        const float halfSize = std::max(0.001f, config.size * scaleCurve * (1.0f - lifeT * 0.5f));
+        // Apply driver color modulation
+        if (driverColor != Color(1.0f, 1.0f, 1.0f, 1.0f)) {
+            color.r *= driverColor.r;
+            color.g *= driverColor.g;
+            color.b *= driverColor.b;
+        }
+
+        const float alpha = std::clamp(color.a * alphaCurve * (1.0f - lifeT * 0.35f) * driverValue, 0.0f, 1.0f);
+        const float halfSize = std::max(0.001f, config.size * scaleCurve * (1.0f - lifeT * 0.5f) * driverValue);
 
         const UnityEngine::Vector3 right = Visuals::Scale(cameraRight, halfSize);
         const UnityEngine::Vector3 up = Visuals::Scale(cameraUp, halfSize);
 
-        vertices[base] = Visuals::Sub(Visuals::Sub(particle.position, right), up);
-        vertices[base + 1] = Visuals::Sub(Visuals::Add(particle.position, right), up);
-        vertices[base + 2] = Visuals::Add(Visuals::Add(particle.position, right), up);
-        vertices[base + 3] = Visuals::Add(Visuals::Sub(particle.position, right), up);
+        UnityEngine::Vector3 v0 = Visuals::Sub(Visuals::Sub(particle.position, right), up);
+        UnityEngine::Vector3 v1 = Visuals::Sub(Visuals::Add(particle.position, right), up);
+        UnityEngine::Vector3 v2 = Visuals::Add(Visuals::Add(particle.position, right), up);
+        UnityEngine::Vector3 v3 = Visuals::Add(Visuals::Sub(particle.position, right), up);
+
+        // Apply transform rotation and scale to vertices
+        if (hasTransform) {
+            v0 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v0, transformPos)), transformScale.x));
+            v1 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v1, transformPos)), transformScale.x));
+            v2 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v2, transformPos)), transformScale.x));
+            v3 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v3, transformPos)), transformScale.x));
+        }
+
+        vertices[base] = v0;
+        vertices[base + 1] = v1;
+        vertices[base + 2] = v2;
+        vertices[base + 3] = v3;
 
         const UnityEngine::Color vertexColor{color.r, color.g, color.b, alpha};
         colors[base] = vertexColor;

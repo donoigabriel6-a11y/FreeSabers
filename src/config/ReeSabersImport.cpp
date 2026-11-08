@@ -124,7 +124,7 @@ void ParseBlade(const rapidjson::Value& config, SaberPreset& preset, std::vector
         }
         blade.bladeMaskResolution = Json::Int(*mask, "bladeMaskResolution", blade.bladeMaskResolution);
         if (const auto* drivers = Json::Member(*mask, "drivers")) {
-            ParseDrivers(*drivers, preset.drivers);
+            ParseDrivers(*drivers, blade.drivers);
         }
     }
 
@@ -274,7 +274,7 @@ void ParseSparks(const rapidjson::Value& config, SaberPreset& preset, std::vecto
                 }
             }
             if (const auto* drivers = Json::Member(*mask, "drivers")) {
-                ParseDrivers(*drivers, preset.drivers);
+                ParseDrivers(*drivers, sparks.drivers);
             }
         }
     }

@@ -194,6 +194,10 @@ void WriteBlade(rapidjson::Value& presetValue, const BladeConfig& blade, Allocat
     value.AddMember("useTexture", blade.useTexture, allocator);
     WriteString(value, "texturePath", blade.texturePath, allocator);
 
+    rapidjson::Value drivers(rapidjson::kArrayType);
+    for (const auto& driver : blade.drivers) WriteDriver(drivers, driver, allocator);
+    value.AddMember("drivers", drivers, allocator);
+
     WriteColorOverride(value, blade.colorOverride, allocator);
     presetValue.AddMember("blade", value, allocator);
 }
@@ -256,6 +260,11 @@ void WriteSparks(rapidjson::Value& presetValue, const SparkConfig& sparks, Alloc
     WriteCurve(value, "alphaOverLifetime", sparks.alphaOverLifetime, allocator);
     WriteCurve(value, "scaleOverLifetime", sparks.scaleOverLifetime, allocator);
     WriteTransform(value, sparks.transform, allocator);
+
+    rapidjson::Value drivers(rapidjson::kArrayType);
+    for (const auto& driver : sparks.drivers) WriteDriver(drivers, driver, allocator);
+    value.AddMember("drivers", drivers, allocator);
+
     value.AddMember("useTexture", sparks.useTexture, allocator);
     WriteString(value, "texturePath", sparks.texturePath, allocator);
     presetValue.AddMember("sparks", value, allocator);
@@ -435,6 +444,8 @@ BladeConfig ReadBlade(const rapidjson::Value& object, BladeConfig blade) {
         blade.colorOverride.colorSource = Json::Int(*colorOverride, "colorSource", blade.colorOverride.colorSource);
     }
 
+    blade.drivers = ReadDrivers(object, "drivers");
+
     return blade;
 }
 
@@ -496,6 +507,7 @@ SparkConfig ReadSparks(const rapidjson::Value& object, SparkConfig sparks) {
     if (const auto* value = Json::Member(object, "transform")) sparks.transform = Json::TransformValue(*value);
     sparks.useTexture = Json::Bool(object, "useTexture", sparks.useTexture);
     sparks.texturePath = Json::String(object, "texturePath", sparks.texturePath);
+    sparks.drivers = ReadDrivers(object, "drivers");
     return sparks;
 }
 

@@ -74,23 +74,64 @@ bool TrailRenderer::Initialize(const TrailConfig& trailConfig, UnityEngine::Mate
     Visuals::SetIntIfPresent(material, "_ZWrite", 0);                  // Don't write to depth buffer
     Visuals::SetIntIfPresent(material, "_ZTest", config.alwaysOnTop ? 8 : 4);  // Always or LEqual
 
-    // Standard alpha blending: SrcAlpha, OneMinusSrcAlpha
-    Visuals::SetIntIfPresent(material, "_SrcBlend", 5);   // SrcAlpha
-    Visuals::SetIntIfPresent(material, "_DstBlend", 10);  // OneMinusSrcAlpha
+    // Configure blending mode
+    // 0 = Add, 1 = Alpha, 2 = Premultiply, 3 = Multiply, 4 = Soft Add
+    int srcBlend = 5;  // SrcAlpha
+    int dstBlend = 10; // OneMinusSrcAlpha
+    int blendOp = 0;   // Add
 
-    // Some shaders use different property names for blending
-    Visuals::SetIntIfPresent(material, "_BlendOp", 0);    // Add
-    Visuals::SetIntIfPresent(material, "_Blend", 1);      // Enabled
+    switch (config.blendingMode) {
+        case 0: // Additive
+            srcBlend = 5;   // SrcAlpha
+            dstBlend = 1;   // One
+            blendOp = 0;    // Add
+            break;
+        case 1: // Alpha Blend
+            srcBlend = 5;   // SrcAlpha
+            dstBlend = 10;  // OneMinusSrcAlpha
+            blendOp = 0;    // Add
+            break;
+        case 2: // Premultiplied Alpha
+            srcBlend = 1;   // One
+            dstBlend = 10;  // OneMinusSrcAlpha
+            blendOp = 0;    // Add
+            break;
+        case 3: // Multiply
+            srcBlend = 10;  // OneMinusSrcAlpha (approximation)
+            dstBlend = 0;   // Zero
+            blendOp = 0;    // Add
+            break;
+        case 4: // Soft Add
+            srcBlend = 5;   // SrcAlpha
+            dstBlend = 1;   // One
+            blendOp = 4;    // Min
+            break;
+    }
+
+    Visuals::SetIntIfPresent(material, "_SrcBlend", srcBlend);
+    Visuals::SetIntIfPresent(material, "_DstBlend", dstBlend);
+    Visuals::SetIntIfPresent(material, "_BlendOp", blendOp);
+    Visuals::SetIntIfPresent(material, "_Blend", 1);
 
     // Render queue: transparent queue + offset
     int renderQueue = config.alwaysOnTop ? 4000 : config.renderQueue;
     material->set_renderQueue(renderQueue);
 
     // Texture setup
-    if (material->HasProperty(StringW("_MainTex"))) {
+    if (config.useTexture && !config.texturePath.empty()) {
+        UnityEngine::Texture2D* texture = Visuals::LoadTextureFromFile(config.texturePath);
+        if (texture && material->HasProperty(StringW("_MainTex"))) {
+            material->SetTexture(StringW("_MainTex"), texture);
+            material->set_mainTextureScale(Visuals::ToUnity(config.tiling));
+            material->set_mainTextureOffset(Visuals::ToUnity(config.uvScroll));
+        }
+    } else if (material->HasProperty(StringW("_MainTex"))) {
         material->set_mainTextureScale(Visuals::ToUnity(config.tiling));
         material->set_mainTextureOffset(Visuals::ToUnity(config.uvScroll));
     }
+
+    // Distortion
+    Visuals::SetFloatIfPresent(material, "_DistortionStrength", config.distortionMultiplier);
 
     // Ensure the material supports vertex colors
     Visuals::SetIntIfPresent(material, "_VertexColor", 1);
@@ -117,8 +158,8 @@ bool TrailRenderer::Initialize(const TrailConfig& trailConfig, UnityEngine::Mate
     }
 
     initialized = true;
-    PaperLogger.info("FreeSabers: trail '%s' built (%d samples, %.3fs, queue=%d)",
-                     config.name.c_str(), maxSamples, config.length, renderQueue);
+    PaperLogger.info("FreeSabers: trail '%s' built (%d samples, %.3fs, queue=%d, blend=%d, distort=%.2f)",
+                     config.name.c_str(), maxSamples, config.length, renderQueue, config.blendingMode, config.distortionMultiplier);
     return true;
 }
 
@@ -162,10 +203,14 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
 
     const float speedBoost = 1.0f + std::max(speed, 0.0f) * config.speedWidth;
     const int used = static_cast<int>(samples.size());
-    const UnityEngine::Vector3 trailOffset = Visuals::ToUnity(config.transform.position);
 
     // UV scroll offset based on time for animated textures
     const float uvTimeOffset = std::fmod(elapsed * config.uvScroll.y, 1.0f);
+
+    // Build transform matrix from config.transform
+    const UnityEngine::Vector3 transformPos = Visuals::ToUnity(config.transform.position);
+    const UnityEngine::Quaternion transformRot = UnityEngine::Quaternion::Euler(Visuals::ToUnity(config.transform.rotation));
+    const UnityEngine::Vector3 transformScale = Visuals::ToUnity(config.transform.scale);
 
     for (int i = 0; i < used; ++i) {
         const Sample& sample = samples[i];
@@ -178,15 +223,21 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
         if (config.IsTipTrail()) {
             const float offset = std::clamp(config.offset, 0.0f, 2.0f);
             const UnityEngine::Vector3 point = Visuals::Add(
-                Visuals::Lerp(sample.bottom, sample.tip, offset), trailOffset);
+                Visuals::Lerp(sample.bottom, sample.tip, offset), transformPos);
             const float halfWidth = config.width * 0.5f * widthScale;
             left = Visuals::Add(point, Visuals::Scale(cameraRight, -halfWidth));
             right = Visuals::Add(point, Visuals::Scale(cameraRight, halfWidth));
         } else {
             const UnityEngine::Vector3 center = Visuals::Scale(Visuals::Add(sample.bottom, sample.tip), 0.5f);
             const UnityEngine::Vector3 half = Visuals::Scale(Visuals::Sub(sample.tip, sample.bottom), 0.5f * widthScale);
-            left = Visuals::Add(Visuals::Sub(center, half), trailOffset);
-            right = Visuals::Add(Visuals::Add(center, half), trailOffset);
+            left = Visuals::Add(Visuals::Sub(center, half), transformPos);
+            right = Visuals::Add(Visuals::Add(center, half), transformPos);
+        }
+
+        // Apply transform rotation and scale
+        if (!config.transform.IsIdentity()) {
+            left = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(left, transformPos)), transformScale.x));
+            right = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(right, transformPos)), transformScale.x));
         }
 
         Color baseColor = config.colorOverAge.Empty()
@@ -225,6 +276,10 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
     mesh->set_vertices(vertices);
     mesh->set_colors(colors);
     mesh->set_uv(uvs);
+
+    // Update distortion in material if it changes per frame
+    Visuals::SetFloatIfPresent(material, "_DistortionStrength", config.distortionMultiplier);
+
     if (renderer) renderer->set_enabled(true);
 }
 
