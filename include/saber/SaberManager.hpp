@@ -91,6 +91,13 @@ private:
         int preCutScore = 0;
         int postCutScore = 0;
 
+        // Driver state for resistance smoothing
+        struct DriverState {
+            float bladeDriverValue = 1.0f;
+            std::vector<float> trailDriverValues;
+            float sparkDriverValue = 1.0f;
+        } driverState;
+
         std::unique_ptr<SaberModel> blade;
         std::vector<std::unique_ptr<TrailRenderer>> trails;
         std::unique_ptr<GlowEffect> glow;

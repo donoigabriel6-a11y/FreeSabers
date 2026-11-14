@@ -28,6 +28,11 @@ static int s_globalMisses = 0;
 static float s_globalCutsPerSecond = 0.0f;
 static float s_globalAccuracy = 0.5f;
 
+// Cached controller pointers (invalidated on level start)
+static GlobalNamespace::ScoreController* s_scoreController = nullptr;
+static GlobalNamespace::GameEnergyCounter* s_gameEnergyCounter = nullptr;
+static GlobalNamespace::ComboController* s_comboController = nullptr;
+
 SaberManager& SaberManager::GetInstance() {
     static SaberManager instance;
     return instance;
@@ -84,6 +89,13 @@ void SaberManager::OnSaberModelInit(GlobalNamespace::SaberModelController* model
 
     BuildVisuals(instance);
     instance.lastTip = GetBladePoint(instance, instance.preset.blade.zOffsetTo);
+
+    // Initialize driver resistance state
+    instance.driverState.bladeDriverValue = 1.0f;
+    instance.driverState.trailDriverValues.clear();
+    instance.driverState.trailDriverValues.resize(instance.trails.size(), 1.0f);
+    instance.driverState.sparkDriverValue = 1.0f;
+
     PaperLogger.info("FreeSabers: %s saber using preset '%s'",
                      isLeft ? "left" : "right", instance.preset.name.c_str());
 }
@@ -269,7 +281,8 @@ float SaberManager::EvaluateDriver(int valueType, const Instance& instance, cons
         case DriverType::AngularVelocity:
             return instance.speed;
         case DriverType::SwingsPerSecond:
-            return instance.speed * 0.6f;
+            // Approximate swings per second from speed; average swing produces ~15-20 m/s tip velocity
+            return std::max(0.0f, instance.speed / 18.0f);
         case DriverType::TimeDependence:
             return instance.time;
         case DriverType::TimeAfterCut:
@@ -339,42 +352,68 @@ void SaberManager::Update(float deltaTime) {
             tint = blade.colorOverride.Evaluate(instance.time);
         }
 
-        // Evaluate blade drivers
-        float bladeDriverValue = 1.0f;
+        // Evaluate blade drivers with resistance smoothing
+        float bladeDriverTarget = 1.0f;
+        Color bladeDriverColor(1.0f, 1.0f, 1.0f, 1.0f);
         for (const auto& driver : blade.drivers) {
             const float raw = EvaluateDriver(driver.valueType, instance, direction);
-            bladeDriverValue *= std::clamp(driver.EvaluateValue(raw), 0.0f, 2.0f);
-        }
+            const float evaluatedValue = driver.EvaluateValue(raw);
+            bladeDriverTarget *= std::clamp(evaluatedValue, 0.0f, 2.0f);
 
-        if (instance.blade) instance.blade->Update(dt, tint, bladeDriverValue);
+            if (!driver.colorOverValue.Empty()) {
+                bladeDriverColor = Color::Lerp(bladeDriverColor, driver.EvaluateColor(raw), 0.5f);
+            }
+        }
+        instance.driverState.bladeDriverValue = blade.drivers.empty()
+            ? bladeDriverTarget
+            : blade.drivers.front().ApplyResistance(instance.driverState.bladeDriverValue, bladeDriverTarget, dt);
+
+        if (instance.blade) instance.blade->Update(dt, tint, instance.driverState.bladeDriverValue, bladeDriverColor);
 
         if (instance.glow) {
             instance.glow->Update(dt, tint);
         }
 
+        // Evaluate trail drivers with resistance smoothing
+        size_t trailIndex = 0;
         for (auto& trail : instance.trails) {
-            float driverAlpha = 1.0f;
+            float driverAlphaTarget = 1.0f;
             for (const auto& driver : trail->GetConfig().drivers) {
                 const float raw = EvaluateDriver(driver.valueType, instance, direction);
-                driverAlpha *= std::clamp(driver.EvaluateValue(raw), 0.0f, 2.0f);
+                driverAlphaTarget *= std::clamp(driver.EvaluateValue(raw), 0.0f, 2.0f);
+            }
+            // Apply resistance from first driver that has it
+            float driverAlpha = driverAlphaTarget;
+            const auto& trailConfig = trail->GetConfig();
+            if (!trailConfig.drivers.empty()) {
+                driverAlpha = trailConfig.drivers.front().ApplyResistance(
+                    instance.driverState.trailDriverValues[trailIndex], driverAlphaTarget, dt);
+                instance.driverState.trailDriverValues[trailIndex] = driverAlpha;
             }
             trail->Update(dt, bottom, tip, instance.speed, driverAlpha);
+            ++trailIndex;
         }
 
         if (instance.sparks) {
-            // Evaluate spark drivers
-            float sparkDriverValue = 1.0f;
+            // Evaluate spark drivers with resistance smoothing
+            float sparkDriverTarget = 1.0f;
             Color sparkDriverColor(1.0f, 1.0f, 1.0f, 1.0f);
             for (const auto& driver : instance.preset.sparks.drivers) {
                 const float raw = EvaluateDriver(driver.valueType, instance, direction);
                 const float evaluatedValue = driver.EvaluateValue(raw);
-                sparkDriverValue *= std::clamp(evaluatedValue, 0.0f, 2.0f);
+                sparkDriverTarget *= std::clamp(evaluatedValue, 0.0f, 2.0f);
 
                 if (!driver.colorOverValue.Empty()) {
-                    sparkDriverColor = Color::Lerp(sparkDriverColor, driver.EvaluateColor(raw), 0.5f);
+                    // Use evaluated value as blend weight (clamped to 0-1) so stronger drivers have more color influence
+                    const float blendWeight = std::clamp(evaluatedValue, 0.0f, 1.0f);
+                    sparkDriverColor = Color::Lerp(sparkDriverColor, driver.EvaluateColor(raw), blendWeight);
                 }
             }
-            instance.sparks->Update(dt, tip, tint, instance.speed, sparkDriverValue, sparkDriverColor);
+            instance.driverState.sparkDriverValue = instance.preset.sparks.drivers.empty()
+                ? sparkDriverTarget
+                : instance.preset.sparks.drivers.front().ApplyResistance(
+                      instance.driverState.sparkDriverValue, sparkDriverTarget, dt);
+            instance.sparks->Update(dt, tip, tint, instance.speed, instance.driverState.sparkDriverValue, sparkDriverColor);
         }
 
         if (instance.bolts) {
@@ -387,62 +426,64 @@ void SaberManager::Update(float deltaTime) {
 
 void SaberManager::UpdateGameplayState() {
     // Read gameplay state directly from controllers
-    static GlobalNamespace::ScoreController* scoreController = nullptr;
-    static GlobalNamespace::GameEnergyCounter* gameEnergyCounter = nullptr;
-    static GlobalNamespace::ComboController* comboController = nullptr;
-
-    if (!scoreController) {
+    // Use file-level statics so they can be invalidated on level start
+    if (!s_scoreController) {
         auto controllers = UnityEngine::Object::FindObjectsOfType<GlobalNamespace::ScoreController*>();
         if (controllers) {
             for (size_t i = 0; i < controllers.size(); ++i) {
-                if (controllers[i]) {
-                    scoreController = controllers[i];
+                if (controllers[i] && Visuals::IsAlive(controllers[i])) {
+                    s_scoreController = controllers[i];
                     break;
                 }
             }
         }
     }
-    if (!gameEnergyCounter) {
+    if (!s_gameEnergyCounter) {
         auto counters = UnityEngine::Object::FindObjectsOfType<GlobalNamespace::GameEnergyCounter*>();
         if (counters) {
             for (size_t i = 0; i < counters.size(); ++i) {
-                if (counters[i]) {
-                    gameEnergyCounter = counters[i];
+                if (counters[i] && Visuals::IsAlive(counters[i])) {
+                    s_gameEnergyCounter = counters[i];
                     break;
                 }
             }
         }
     }
-    if (!comboController) {
+    if (!s_comboController) {
         auto controllers = UnityEngine::Object::FindObjectsOfType<GlobalNamespace::ComboController*>();
         if (controllers) {
             for (size_t i = 0; i < controllers.size(); ++i) {
-                if (controllers[i]) {
-                    comboController = controllers[i];
+                if (controllers[i] && Visuals::IsAlive(controllers[i])) {
+                    s_comboController = controllers[i];
                     break;
                 }
             }
         }
     }
+
+    // Validate cached controllers are still alive
+    if (s_scoreController && !Visuals::IsAlive(s_scoreController)) s_scoreController = nullptr;
+    if (s_gameEnergyCounter && !Visuals::IsAlive(s_gameEnergyCounter)) s_gameEnergyCounter = nullptr;
+    if (s_comboController && !Visuals::IsAlive(s_comboController)) s_comboController = nullptr;
 
     for (auto& [model, instance] : sabers) {
         if (!Visuals::IsAlive(instance.parent)) continue;
 
-        if (scoreController) {
-            instance.cutScore = scoreController->get_multipliedScore();
+        if (s_scoreController) {
+            instance.cutScore = s_scoreController->get_multipliedScore();
             instance.preCutScore = 0; // Not directly available
             instance.postCutScore = instance.cutScore;
             instance.multiplier = s_globalMultiplier;
-            const int maxScore = scoreController->get_immediateMaxPossibleMultipliedScore();
+            const int maxScore = s_scoreController->get_immediateMaxPossibleMultipliedScore();
             instance.scorePercentage = maxScore > 0 ? static_cast<float>(instance.cutScore) / static_cast<float>(maxScore) : 0.0f;
         }
 
-        if (gameEnergyCounter) {
-            instance.energy = std::clamp(gameEnergyCounter->get_energy(), 0.0f, 1.0f);
+        if (s_gameEnergyCounter) {
+            instance.energy = std::clamp(s_gameEnergyCounter->get_energy(), 0.0f, 1.0f);
         }
 
-        if (comboController) {
-            instance.combo = comboController->__cordl_internal_get__combo();
+        if (s_comboController) {
+            instance.combo = s_comboController->__cordl_internal_get__combo();
         }
 
         instance.misses = s_globalMisses;
@@ -470,11 +511,13 @@ void SaberManager::UpdateAccuracy(float accuracy) {
 void SaberManager::OnNoteCut(GlobalNamespace::SaberType saberType, const GlobalNamespace::NoteCutInfo& noteCutInfo) {
     const bool isLeft = saberType == GlobalNamespace::SaberType::SaberA;
     const float strength = noteCutInfo.saberSpeed; // Use saber speed as strength indicator
+
     for (auto& [model, instance] : sabers) {
         if (instance.isLeft != isLeft || !Visuals::IsAlive(instance.parent) || !instance.preset.blade.enabled) continue;
 
         instance.timeSinceCut = 0.0f;
         if (instance.glow) instance.glow->PulseOnCut(strength);
+        // Note: preCutScore and postCutScore are updated from ScoreController in UpdateGameplayState
         // combo is tracked by ComboController in UpdateGameplayState
 
         if (instance.sparks && Config::GetInstance().AreSparksEnabled() && Config::GetInstance().IsEnabled()) {
@@ -488,13 +531,26 @@ void SaberManager::OnNoteCut(GlobalNamespace::SaberType saberType, const GlobalN
 }
 
 void SaberManager::OnNoteMissed() {
-    // misses and combo are tracked in UpdateGameplayState
+    // Increment global misses counter for Misses driver
+    IncrementMisses();
 }
 
 void SaberManager::OnLevelStart() {
     // The previous scene may still hold visual roots or vanilla objects to restore.
     for (auto& [model, instance] : sabers) DisposeVisuals(instance);
     sabers.clear();
+
+    // Reset global gameplay state for the new level
+    s_globalMultiplier = 1;
+    s_globalMisses = 0;
+    s_globalCutsPerSecond = 0.0f;
+    s_globalAccuracy = 0.5f;
+
+    // Invalidate cached controller pointers so they're re-acquired for the new scene
+    s_scoreController = nullptr;
+    s_gameEnergyCounter = nullptr;
+    s_comboController = nullptr;
+
     PaperLogger.info("FreeSabers: level started, waiting for saber models");
 }
 

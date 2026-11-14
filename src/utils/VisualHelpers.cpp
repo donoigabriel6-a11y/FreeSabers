@@ -404,15 +404,14 @@ UnityEngine::Texture2D* LoadTextureFromFile(const std::string& path) {
         return nullptr;
     }
 
-    // Create texture and load raw data (Unity decodes PNG/JPG automatically)
-    // Use simple constructor without format (will default to RGBA32)
+    // Create texture and load raw texture data (Unity decodes PNG/JPG automatically)
     auto* texture = UnityEngine::Texture2D::New_ctor(2, 2);
     if (!texture) {
         PaperLogger.warn("FreeSabers: failed to create Texture2D");
         return nullptr;
     }
 
-    // Load raw texture data
+    // Use LoadRawTextureData to load raw texture data (Unity decodes PNG/JPG automatically)
     ArrayW<uint8_t> data(fileData.size());
     for (size_t i = 0; i < fileData.size(); ++i) {
         data[i] = fileData[i];

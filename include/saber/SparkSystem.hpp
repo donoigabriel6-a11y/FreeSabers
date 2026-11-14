@@ -28,6 +28,7 @@ public:
     void Dispose();
 
     bool IsInitialized() const { return initialized; }
+    void Clear();
 
 private:
     struct Particle {

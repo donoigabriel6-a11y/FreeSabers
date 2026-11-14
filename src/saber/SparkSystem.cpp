@@ -172,6 +172,12 @@ void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const
     if (!initialized || !config.enabled) return;
 
     elapsed += deltaTime;
+    // Prevent float precision loss over long sessions by periodically resetting elapsed.
+    // Note: particle ages are tracked independently, so we only need to adjust elapsed for turbulence.
+    if (elapsed > 1000.0f) {
+        elapsed -= 1000.0f;
+    }
+
     const float dt = std::min(deltaTime, 0.05f);
 
     // Apply driver value to emission rate
@@ -215,10 +221,15 @@ void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const
         return;
     }
 
+    // Get camera orientation - cache reference to avoid repeated get_main() calls
+    static UnityEngine::Camera* cachedCamera = nullptr;
+    if (!Visuals::IsAlive(cachedCamera)) {
+        cachedCamera = UnityEngine::Camera::get_main();
+    }
     UnityEngine::Vector3 cameraRight{1.0f, 0.0f, 0.0f};
     UnityEngine::Vector3 cameraUp{0.0f, 1.0f, 0.0f};
-    if (UnityEngine::Camera* camera = UnityEngine::Camera::get_main()) {
-        if (UnityEngine::Transform* transform = camera->get_transform()) {
+    if (Visuals::IsAlive(cachedCamera)) {
+        if (UnityEngine::Transform* transform = cachedCamera->get_transform()) {
             cameraRight = transform->get_right();
             cameraUp = transform->get_up();
         }
@@ -311,6 +322,13 @@ void SparkSystem::WriteBuffers(const UnityEngine::Vector3& cameraRight, const Un
 
 void SparkSystem::SetVisible(bool visible) {
     if (Visuals::IsAlive(root)) root->SetActive(visible);
+}
+
+void SparkSystem::Clear() {
+    particles.clear();
+    elapsed = 0.0f;
+    emitTimer = 0.0f;
+    if (renderer) renderer->set_enabled(false);
 }
 
 void SparkSystem::Dispose() {

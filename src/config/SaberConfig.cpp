@@ -694,6 +694,18 @@ float MaterialDriver::EvaluateValue(float raw) const {
     return Clamp01(valueOverValue.Evaluate(normalized));
 }
 
+// Apply resistance smoothing to driver value (frame-rate independent)
+float MaterialDriver::ApplyResistance(float currentValue, float targetValue, float deltaTime) const {
+    if (increaseResistance <= 0.0f && decreaseResistance <= 0.0f) return targetValue;
+
+    const float resistance = (targetValue > currentValue) ? increaseResistance : decreaseResistance;
+    if (resistance <= 0.0f) return targetValue;
+
+    // Exponential smoothing: value += (target - value) * (1 - exp(-dt / resistance))
+    const float rate = 1.0f - std::exp(-deltaTime / std::max(resistance, 0.001f));
+    return currentValue + (targetValue - currentValue) * rate;
+}
+
 Color MaterialDriver::EvaluateColor(float raw) const {
     float normalized = 0.0f;
     if (valueTo != valueFrom) {

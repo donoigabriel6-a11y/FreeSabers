@@ -409,7 +409,7 @@ bool Config::ImportFile(const std::string& sourcePath, bool overwrite, std::stri
 int Config::ImportReeSabersFiles(bool overwrite) {
     std::vector<std::string> sources;
 
-    auto collect = [&sources](const std::string& directory) {
+    auto collect = [&sources, this](const std::string& directory) {
         std::error_code error;
         if (!fs::exists(directory, error)) return;
         for (const auto& entry : fs::directory_iterator(directory, error)) {
@@ -417,6 +417,11 @@ int Config::ImportReeSabersFiles(bool overwrite) {
             if (!entry.is_regular_file()) continue;
             const std::string extension = Lower(entry.path().extension().string());
             if (extension != ".reesaber" && extension != ".json") continue;
+            // Skip files in presetDir that already have a .freesaber counterpart
+            if (directory == presetDir) {
+                const std::string freesaberPath = presetDir + "/" + SanitizeFileName(entry.path().stem().string()) + ".freesaber";
+                if (fs::exists(freesaberPath, error)) continue;
+            }
             sources.push_back(entry.path().string());
         }
     };
@@ -592,3 +597,4 @@ void Config::SetPerformanceMode(bool value) {
 }
 
 } // namespace FreeSabers
+

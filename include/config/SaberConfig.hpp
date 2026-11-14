@@ -36,7 +36,11 @@ struct Color {
     Color MultiplyRGB(float scale) const { return Color(r * scale, g * scale, b * scale, a); }
 
     bool operator==(const Color& other) const {
-        return r == other.r && g == other.g && b == other.b && a == other.a;
+        constexpr float epsilon = 1e-4f;
+        return std::abs(r - other.r) < epsilon &&
+               std::abs(g - other.g) < epsilon &&
+               std::abs(b - other.b) < epsilon &&
+               std::abs(a - other.a) < epsilon;
     }
     bool operator!=(const Color& other) const {
         return !(*this == other);
@@ -149,6 +153,9 @@ struct MaterialDriver {
 
     float EvaluateValue(float raw) const;
     Color EvaluateColor(float raw) const;
+
+    // Apply frame-rate independent resistance smoothing to driver value
+    float ApplyResistance(float currentValue, float targetValue, float deltaTime) const;
 };
 
 // ============================================================================

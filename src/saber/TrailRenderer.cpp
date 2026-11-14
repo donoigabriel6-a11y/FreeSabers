@@ -168,6 +168,16 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
     if (!initialized || !config.enabled) return;
 
     elapsed += deltaTime;
+    // Prevent float precision loss over long sessions by periodically resetting elapsed
+    // while preserving relative sample times.
+    if (elapsed > 1000.0f) {
+        const float elapsedOffset = elapsed;
+        for (auto& sample : samples) {
+            sample.time -= elapsedOffset;
+        }
+        lastSampleTime -= elapsedOffset;
+        elapsed -= elapsedOffset;
+    }
 
     const bool shouldSample = samples.empty() ||
         Visuals::Distance(samples.back().bottom, bottom) > config.minVertexDistance ||
@@ -196,9 +206,16 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
         return;
     }
 
+    // Get camera orientation - cache reference to avoid repeated get_main() calls
+    static UnityEngine::Camera* cachedCamera = nullptr;
+    if (!Visuals::IsAlive(cachedCamera)) {
+        cachedCamera = UnityEngine::Camera::get_main();
+    }
     UnityEngine::Vector3 cameraRight{1.0f, 0.0f, 0.0f};
-    if (UnityEngine::Camera* camera = UnityEngine::Camera::get_main()) {
-        if (UnityEngine::Transform* transform = camera->get_transform()) cameraRight = transform->get_right();
+    if (Visuals::IsAlive(cachedCamera)) {
+        if (UnityEngine::Transform* transform = cachedCamera->get_transform()) {
+            cameraRight = transform->get_right();
+        }
     }
 
     const float speedBoost = 1.0f + std::max(speed, 0.0f) * config.speedWidth;
