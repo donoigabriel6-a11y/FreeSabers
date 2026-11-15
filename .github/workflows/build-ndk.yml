@@ -1,4 +1,4 @@
-name: NDK build
+name: Do not build with this!
 
 on:
   workflow_dispatch:
