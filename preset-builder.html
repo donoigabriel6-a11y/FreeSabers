@@ -1,0 +1,3125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FreeSabers Preset Builder - Create custom saber presets for Beat Saber Quest">
+    <title>Preset Builder - FreeSabers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --bg-panel: #15151e;
+            --fg-primary: #f0f0f5;
+            --fg-secondary: #a0a0b0;
+            --fg-muted: #606070;
+            --accent-primary: #00ff88;
+            --accent-secondary: #ff3366;
+            --accent-blue: #00aaff;
+            --accent-glow: #00ff88;
+            --border-color: #2a2a3a;
+            --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --quest-green: #00ff88;
+            --saber-blue: #00aaff;
+            --saber-red: #ff3366;
+            --input-bg: #0f0f17;
+            --input-border: #2a2a3a;
+            --input-focus: #00aaff;
+            --danger: #ff4466;
+            --warning: #ffaa00;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg-primary: #f8f8fc;
+                --bg-secondary: #ffffff;
+                --bg-card: #f0f0f8;
+                --bg-panel: #f5f5fb;
+                --fg-primary: #1a1a24;
+                --fg-secondary: #4a4a5a;
+                --fg-muted: #8a8a9a;
+                --accent-primary: #00aa66;
+                --accent-secondary: #cc2244;
+                --accent-blue: #0088cc;
+                --accent-glow: #00aa66;
+                --border-color: #e0e0ec;
+                --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+                --input-bg: #ffffff;
+                --input-border: #d0d0e0;
+                --input-focus: #0088cc;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--fg-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .font-display { font-family: 'Orbitron', monospace; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Background */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 255, 136, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(var(--bg-primary), 0.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--fg-primary);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 16px rgba(0, 170, 255, 0.3), 0 0 16px rgba(255, 51, 102, 0.3);
+            position: relative;
+        }
+
+        .logo-icon::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            border-radius: 10px;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.5;
+        }
+
+        .logo-icon svg { width: 22px; height: 22px; stroke: var(--bg-primary); }
+
+        .logo-text {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-tag {
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            background: rgba(0, 255, 136, 0.15);
+            padding: 1px 6px;
+            border-radius: 3px;
+            margin-left: 6px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--saber-blue), var(--saber-red));
+            color: white;
+            box-shadow: 0 4px 16px rgba(0, 170, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 170, 255, 0.4), 0 8px 24px rgba(255, 51, 102, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--fg-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--fg-secondary);
+            border: none;
+        }
+
+        .btn-ghost:hover {
+            color: var(--fg-primary);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn-danger {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Main Layout */
+        .builder-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 360px;
+            gap: 24px;
+            padding: 24px 0 48px;
+        }
+
+        @media (max-width: 1200px) {
+            .builder-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            height: fit-content;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .panel-sticky {
+            position: sticky;
+            top: 80px;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--fg-primary);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .panel-section {
+            margin-bottom: 24px;
+        }
+
+        .panel-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--fg-muted);
+            margin-bottom: 12px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--fg-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        label .optional {
+            font-weight: 400;
+            color: var(--fg-muted);
+            font-size: 0.7rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="color"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            color: var(--fg-primary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="color"] {
+            height: 40px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(0, 170, 255, 0.15);
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--fg-primary);
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-group input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-primary);
+        }
+
+        .slider-group .slider-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .color-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .color-row input[type="color"] { width: 50px; flex-shrink: 0; }
+        .color-row input[type="text"] { flex: 1; }
+
+        /* Tabs */
+        .side-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+        }
+
+        .side-tab {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px 6px 0 0;
+            color: var(--fg-muted);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .side-tab:hover { color: var(--fg-secondary); background: rgba(255,255,255,0.03); }
+        .side-tab.active {
+            color: var(--accent-primary);
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; animation: fadeIn 0.2s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Curve Editor */
+        .curve-editor {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            height: 120px;
+            position: relative;
+            cursor: crosshair;
+        }
+
+        .curve-editor canvas { width: 100%; height: 100%; display: block; }
+
+        .curve-points {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .curve-point {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 4px 8px;
+        }
+
+        .curve-point input { width: 50px; font-size: 0.75rem; padding: 4px 8px; }
+
+        .curve-point button {
+            padding: 4px 8px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        /* Gradient Editor */
+        .gradient-editor {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            height: 60px;
+            position: relative;
+        }
+
+        .gradient-editor canvas { width: 100%; height: 100%; display: block; }
+
+        .gradient-stops {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .gradient-stop {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 8px;
+        }
+
+        .gradient-stop .stop-header { display: flex; gap: 6px; align-items: center; }
+        .gradient-stop input[type="color"] { width: 30px; height: 30px; }
+        .gradient-stop input[type="number"] { width: 50px; font-size: 0.75rem; padding: 4px 8px; }
+        .gradient-stop button { padding: 2px 6px; font-size: 0.65rem; }
+
+        /* Drivers List */
+        .drivers-list { display: flex; flex-direction: column; gap: 8px; }
+        .driver-item {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .driver-header {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .driver-header select { flex: 1; min-width: 140px; }
+        .driver-header .btn { padding: 6px 10px; font-size: 0.75rem; }
+
+        .driver-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 480px) { .driver-fields { grid-template-columns: 1fr; } }
+
+        /* Trails List */
+        .trails-list { display: flex; flex-direction: column; gap: 12px; }
+        .trail-item {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .trail-header {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .trail-header input[type="text"] { flex: 1; min-width: 120px; }
+        .trail-header select { min-width: 140px; }
+
+        /* Preview Panel */
+        .preview-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .preview-canvas {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            aspect-ratio: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-canvas canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .preview-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .info-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--fg-muted);
+            margin-bottom: 6px;
+        }
+
+        .info-value {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent-primary);
+        }
+
+        .json-output {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 10px;
+            padding: 16px;
+            max-height: 400px;
+            overflow: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .json-output .key { color: var(--accent-blue); }
+        .json-output .string { color: var(--accent-primary); }
+        .json-output .number { color: var(--warning); }
+        .json-output .boolean { color: var(--accent-secondary); }
+        .json-output .null { color: var(--fg-muted); }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--card-shadow);
+            animation: slideIn 0.3s ease;
+            max-width: 360px;
+        }
+
+        .toast.success { border-color: var(--accent-primary); }
+        .toast.error { border-color: var(--danger); }
+        .toast.warning { border-color: var(--warning); }
+
+        .toast-icon { font-size: 1.2rem; }
+        .toast.success .toast-icon { color: var(--accent-primary); }
+        .toast.error .toast-icon { color: var(--danger); }
+        .toast.warning .toast-icon { color: var(--warning); }
+
+        .toast-message { flex: 1; font-size: 0.85rem; }
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--fg-muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Drag and drop */
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.drag-over {
+            border-color: var(--accent-primary);
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .drop-zone svg { width: 48px; height: 48px; stroke: var(--fg-muted); margin-bottom: 12px; }
+        .drop-zone p { color: var(--fg-secondary); font-size: 0.9rem; }
+
+        /* Saber selector */
+        .saber-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .saber-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-panel);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--fg-secondary);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .saber-btn.active,
+        .saber-btn:hover {
+            border-color: currentColor;
+        }
+
+        .saber-btn.left { color: var(--saber-blue); }
+        .saber-btn.right { color: var(--saber-red); }
+        .saber-btn.left.active { background: rgba(0, 170, 255, 0.1); box-shadow: 0 0 16px rgba(0, 170, 255, 0.2); }
+        .saber-btn.right.active { background: rgba(255, 51, 102, 0.1); box-shadow: 0 0 16px rgba(255, 51, 102, 0.2); }
+
+        .saber-btn svg { width: 24px; height: 24px; }
+
+        .sync-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .sync-toggle input[type="checkbox"] { width: 18px; height: 18px; }
+        .sync-toggle label { margin: 0; font-size: 0.8rem; font-weight: 500; color: var(--fg-primary); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; align-items: flex-start; }
+            .header-actions { width: 100%; justify-content: space-between; }
+            .builder-layout { grid-template-columns: 1fr; padding: 16px 0 32px; }
+            .panel { max-height: none; position: static; }
+            .preview-info { grid-template-columns: 1fr; }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus styles */
+        a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+
+        /* Hidden utility */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo" aria-label="FreeSabers Home">
+                    <div class="logo-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20"/>
+                            <path d="M17 7H7"/>
+                            <path d="M17 17H7"/>
+                        </svg>
+                    </div>
+                    <span class="logo-text font-display">FreeSabers</span>
+                    <span class="logo-tag">Quest Mod</span>
+                </a>
+                <div class="header-actions">
+                    <a href="index.html" class="btn btn-ghost">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 12H5"/>
+                            <path d="M12 19l-7-7 7-7"/>
+                        </svg>
+                        Back
+                    </a>
+                    <button id="btnNew" class="btn btn-secondary" title="New Preset (Ctrl+N)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 5v14"/>
+                            <path d="M5 12h14"/>
+                        </svg>
+                        New
+                    </button>
+                    <button id="btnLoad" class="btn btn-secondary" title="Load Preset (Ctrl+O)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Load
+                    </button>
+                    <button id="btnSave" class="btn btn-primary" title="Save Preset (Ctrl+S)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save
+                    </button>
+                    <input type="file" id="fileInput" accept=".json,.freesaber" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="builder-layout">
+                <!-- Left Panel: Properties -->
+                <aside class="panel panel-sticky" id="propertiesPanel">
+                    <h2 class="panel-title font-display">Properties</h2>
+
+                    <!-- Saber Selector -->
+                    <div class="saber-selector" role="tablist" aria-label="Select saber side">
+                        <button class="saber-btn left active" id="tabLeft" role="tab" aria-selected="true" aria-controls="panelLeft" onclick="selectSaber('left')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 2v20"/>
+                                <path d="M17 7H7"/>
+                                <path d="M17 17H7"/>
+                            </svg>
+                            <span>Left Saber</span>
+                        </button>
+                        <button class="saber-btn right" id="tabRight" role="tab" aria-selected="false" aria-controls="panelRight" onclick="selectSaber('right')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M12 2v20"/>
+                                <path d="M17 7H7"/>
+                                <path d="M17 17H7"/>
+                            </svg>
+                            <span>Right Saber</span>
+                        </button>
+                    </div>
+
+                    <div class="sync-toggle">
+                        <input type="checkbox" id="syncSabers" checked>
+                        <label for="syncSabers">Use same preset for both sabers</label>
+                    </div>
+
+                    <!-- Saber Meta -->
+                    <div class="panel-section" id="sectionMeta">
+                        <h3 class="panel-section-title font-display">Saber Info</h3>
+                        <div class="form-group">
+                            <label>Preset Name</label>
+                            <input type="text" id="saberName" placeholder="My Custom Saber">
+                        </div>
+                        <div class="form-group">
+                            <label>Author</label>
+                            <input type="text" id="saberAuthor" placeholder="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <label>Description <span class="optional">(optional)</span></label>
+                            <textarea id="saberDescription" rows="3" placeholder="Describe your saber..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Blade Config -->
+                    <div class="panel-section" id="sectionBlade">
+                        <h3 class="panel-section-title font-display">Blade</h3>
+                        <div class="form-group">
+                            <label>Enabled</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="bladeEnabled" checked>
+                                <label for="bladeEnabled">Enable Blade</label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Base Color</label>
+                                <div class="color-row">
+                                    <input type="color" id="bladeBaseColor" value="#00ccff">
+                                    <input type="text" id="bladeBaseColorHex" value="#00ccff" placeholder="#00ccff">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Emission Color</label>
+                                <div class="color-row">
+                                    <input type="color" id="bladeEmissionColor" value="#00ccff">
+                                    <input type="text" id="bladeEmissionColorHex" value="#00ccff">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Emission Intensity</label>
+                                <div class="slider-group">
+                                    <input type="range" id="bladeEmissionIntensity" min="0" max="10" step="0.1" value="2">
+                                    <span class="slider-value" id="bladeEmissionIntensityVal">2.0</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Radius</label>
+                                <div class="slider-group">
+                                    <input type="range" id="bladeRadius" min="0.005" max="0.05" step="0.001" value="0.0132">
+                                    <span class="slider-value" id="bladeRadiusVal">0.0132</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Stretch Bias</label>
+                                <div class="slider-group">
+                                    <input type="range" id="bladeStretchBias" min="0" max="20" step="0.5" value="4">
+                                    <span class="slider-value" id="bladeStretchBiasVal">4.0</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Fresnel Power</label>
+                                <div class="slider-group">
+                                    <input type="range" id="bladeFresnelPower" min="0" max="20" step="0.5" value="5">
+                                    <span class="slider-value" id="bladeFresnelPowerVal">5.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Metallic</label>
+                                <div class="slider-group">
+                                    <input type="range" id="bladeMetallic" min="0" max="1" step="0.01" value="0">
+                                    <span class="slider-value" id="bladeMetallicVal">0.0</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Roughness</label>
+                                <div class="slider-group">
+                                    <input type="range" id="bladeRoughness" min="0" max="1" step="0.01" value="0.43">
+                                    <span class="slider-value" id="bladeRoughnessVal">0.43</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Render Queue</label>
+                                <input type="number" id="bladeRenderQueue" value="3002" step="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Blur Frames</label>
+                                <div class="slider-group">
+                                    <input type="range" id="bladeBlurFrames" min="0" max="10" step="0.5" value="2">
+                                    <span class="slider-value" id="bladeBlurFramesVal">2.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Color Override</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="bladeColorOverrideEnabled">
+                                <label for="bladeColorOverrideEnabled">Enable Color Override</label>
+                            </div>
+                        </div>
+                        <div id="bladeColorOverrideOptions" class="hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Type</label>
+                                    <select id="bladeColorOverrideType">
+                                        <option value="0">HSV</option>
+                                        <option value="1">RGB</option>
+                                        <option value="2">Gradient</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Hue</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="bladeColorOverrideHue" min="0" max="1" step="0.01" value="0">
+                                        <span class="slider-value" id="bladeColorOverrideHueVal">0.0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Saturation</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="bladeColorOverrideSat" min="0" max="2" step="0.01" value="1">
+                                        <span class="slider-value" id="bladeColorOverrideSatVal">1.0</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Value</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="bladeColorOverrideVal" min="0" max="2" step="0.01" value="1">
+                                        <span class="slider-value" id="bladeColorOverrideValVal">1.0</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Hue Shift/Sec</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="bladeColorOverrideShift" min="0" max="5" step="0.1" value="0">
+                                        <span class="slider-value" id="bladeColorOverrideShiftVal">0.0</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Fake Glow Mult</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="bladeColorOverrideGlow" min="0" max="5" step="0.1" value="1">
+                                        <span class="slider-value" id="bladeColorOverrideGlowVal">1.0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Profile Curve (Radius along blade)</label>
+                            <div class="curve-editor" id="bladeProfileCurve"></div>
+                            <div class="curve-points" id="bladeProfilePoints"></div>
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.75rem; padding: 6px 12px;" onclick="addCurvePoint('bladeProfile')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Point
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Trails Config -->
+                    <div class="panel-section" id="sectionTrails">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 class="panel-section-title font-display" style="margin: 0;">Trails</h3>
+                            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 10px;" onclick="addTrail()">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Trail
+                            </button>
+                        </div>
+                        <div class="trails-list" id="trailsList"></div>
+                    </div>
+
+                    <!-- Sparks Config -->
+                    <div class="panel-section" id="sectionSparks">
+                        <h3 class="panel-section-title font-display">Sparks</h3>
+                        <div class="form-group">
+                            <label>Enabled</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="sparksEnabled" checked>
+                                <label for="sparksEnabled">Enable Sparks</label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Count</label>
+                                <input type="number" id="sparksCount" value="96" min="8" max="512" step="8">
+                            </div>
+                            <div class="form-group">
+                                <label>Size</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksSize" min="0.01" max="0.2" step="0.005" value="0.03">
+                                    <span class="slider-value" id="sparksSizeVal">0.030</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Min Lifetime</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksMinLifetime" min="0.02" max="1" step="0.01" value="0.1">
+                                    <span class="slider-value" id="sparksMinLifetimeVal">0.10</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Max Lifetime</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksMaxLifetime" min="0.05" max="2" step="0.01" value="0.5">
+                                    <span class="slider-value" id="sparksMaxLifetimeVal">0.50</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Velocity</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksVelocity" min="0.1" max="10" step="0.1" value="1.5">
+                                    <span class="slider-value" id="sparksVelocityVal">1.5</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Spread (deg)</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksSpread" min="0" max="180" step="1" value="35">
+                                    <span class="slider-value" id="sparksSpreadVal">35</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Gravity Y</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksGravity" min="-20" max="20" step="0.5" value="0">
+                                    <span class="slider-value" id="sparksGravityVal">0.0</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Damping</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksDamping" min="0" max="10" step="0.1" value="1.5">
+                                    <span class="slider-value" id="sparksDampingVal">1.5</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Turbulence Power</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksTurbPower" min="0" max="5" step="0.1" value="0">
+                                    <span class="slider-value" id="sparksTurbPowerVal">0.0</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Turbulence Scale</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksTurbScale" min="0" max="20" step="0.5" value="4">
+                                    <span class="slider-value" id="sparksTurbScaleVal">4.0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Emission Mode</label>
+                            <select id="sparksEmissionMode">
+                                <option value="0">On Cut</option>
+                                <option value="1" selected>Cut Burst</option>
+                                <option value="2">Continuous While Swinging</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Trigger %</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksTriggerPct" min="0" max="1" step="0.05" value="0.7">
+                                    <span class="slider-value" id="sparksTriggerPctVal">0.70</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Trigger Period</label>
+                                <div class="slider-group">
+                                    <input type="range" id="sparksTriggerPeriod" min="0.01" max="1" step="0.01" value="0.05">
+                                    <span class="slider-value" id="sparksTriggerPeriodVal">0.05</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Color</label>
+                            <div class="color-row">
+                                <input type="color" id="sparksColor" value="#ffffff">
+                                <input type="text" id="sparksColorHex" value="#ffffff" placeholder="#ffffff">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Color Over Lifetime</label>
+                            <div class="gradient-editor" id="sparksColorGradient"></div>
+                            <div class="gradient-stops" id="sparksColorStops"></div>
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.75rem; padding: 6px 12px;" onclick="addGradientStop('sparksColor')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Stop
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Glow Config -->
+                    <div class="panel-section" id="sectionGlow">
+                        <h3 class="panel-section-title font-display">Glow</h3>
+                        <div class="form-group">
+                            <label>Enabled</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="glowEnabled" checked>
+                                <label for="glowEnabled">Enable Glow</label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Intensity</label>
+                                <div class="slider-group">
+                                    <input type="range" id="glowIntensity" min="0" max="5" step="0.1" value="1.5">
+                                    <span class="slider-value" id="glowIntensityVal">1.5</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Radius</label>
+                                <div class="slider-group">
+                                    <input type="range" id="glowRadius" min="0" max="2" step="0.05" value="0.4">
+                                    <span class="slider-value" id="glowRadiusVal">0.40</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Color</label>
+                            <div class="color-row">
+                                <input type="color" id="glowColor" value="#00ccff">
+                                <input type="text" id="glowColorHex" value="#00ccff" placeholder="#00ccff">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Pulse Enabled</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="glowPulseEnabled">
+                                <label for="glowPulseEnabled">Enable Pulse Animation</label>
+                            </div>
+                        </div>
+                        <div id="glowPulseOptions" class="hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Pulse Speed</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="glowPulseSpeed" min="0.1" max="5" step="0.1" value="1">
+                                        <span class="slider-value" id="glowPulseSpeedVal">1.0</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Pulse Amount</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="glowPulseAmount" min="0" max="1" step="0.05" value="0.35">
+                                        <span class="slider-value" id="glowPulseAmountVal">0.35</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bolts Config -->
+                    <div class="panel-section" id="sectionBolts">
+                        <h3 class="panel-section-title font-display">Dynamic Joints (Bolts)</h3>
+                        <div class="form-group">
+                            <label>Enabled</label>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="boltsEnabled">
+                                <label for="boltsEnabled">Enable Dynamic Joints</label>
+                            </div>
+                        </div>
+                        <div id="boltsOptions" class="hidden">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Joints</label>
+                                    <input type="number" id="boltsJoints" value="4" min="1" max="20" step="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Spacing</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="boltsSpacing" min="0.01" max="0.5" step="0.01" value="0.06">
+                                        <span class="slider-value" id="boltsSpacingVal">0.060</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Size</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="boltsSize" min="0.005" max="0.1" step="0.001" value="0.02">
+                                        <span class="slider-value" id="boltsSizeVal">0.020</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Stiffness</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="boltsStiffness" min="1" max="200" step="1" value="60">
+                                        <span class="slider-value" id="boltsStiffnessVal">60</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Damping</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="boltsDamping" min="0" max="50" step="0.5" value="8">
+                                        <span class="slider-value" id="boltsDampingVal">8.0</span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Gravity Y</label>
+                                    <div class="slider-group">
+                                        <input type="range" id="boltsGravity" min="-50" max="10" step="0.5" value="-1.5">
+                                        <span class="slider-value" id="boltsGravityVal">-1.5</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Color</label>
+                                <div class="color-row">
+                                    <input type="color" id="boltsColor" value="#ffffff">
+                                    <input type="text" id="boltsColorHex" value="#ffffff" placeholder="#ffffff">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Global Drivers -->
+                    <div class="panel-section" id="sectionDrivers">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 class="panel-section-title font-display" style="margin: 0;">Material Drivers</h3>
+                            <button type="button" class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 10px;" onclick="addDriver('global')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Driver
+                            </button>
+                        </div>
+                        <div class="drivers-list" id="globalDriversList"></div>
+                    </div>
+                </aside>
+
+                <!-- Center Panel: Preview -->
+                <section class="panel preview-panel" style="padding: 0; overflow: hidden;">
+                    <div class="preview-canvas" id="previewCanvas">
+                        <canvas id="previewCtx"></canvas>
+                        <div id="previewLoading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--fg-muted);">
+                            <div style="text-align: center;">
+                                <div style="width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px;"></div>
+                                <div>Rendering Preview...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-info">
+                        <div class="info-card">
+                            <div class="info-label font-display">Vertices</div>
+                            <div class="info-value" id="statVertices">0</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label font-display">Triangles</div>
+                            <div class="info-value" id="statTriangles">0</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label font-display">Trails</div>
+                            <div class="info-value" id="statTrails">0</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="info-label font-display">Est. GPU Mem</div>
+                            <div class="info-value" id="statMemory">0 KB</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Panel: JSON Output & Actions -->
+                <aside class="panel panel-sticky" id="outputPanel">
+                    <h2 class="panel-title font-display">Export</h2>
+
+                    <div class="panel-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 class="panel-section-title font-display" style="margin: 0;">JSON Output</h3>
+                            <div style="display: flex; gap: 6px;">
+                                <button id="btnCopyJson" class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 10px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    Copy
+                                </button>
+                                <button id="btnDownloadJson" class="btn btn-primary" style="font-size: 0.7rem; padding: 4px 10px;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Download
+                                </button>
+                            </div>
+                        </div>
+                        <pre class="json-output font-mono" id="jsonOutput" aria-label="Generated JSON preset"></pre>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3 class="panel-section-title font-display">Import</h3>
+                        <div class="drop-zone" id="dropZone" tabindex="0" role="button" aria-label="Drop or click to import a preset JSON file">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            <p>Drag & drop a <code>.json</code> or <code>.freesaber</code> file here, or click to browse</p>
+                            <p style="font-size: 0.75rem; color: var(--fg-muted); margin-top: 8px;">Also supports ReeSabers <code>.reesaber</code> format</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3 class="panel-section-title font-display">Quick Actions</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <button id="btnPresetBlue" class="btn btn-secondary" style="justify-content: flex-start;" onclick="loadPreset('blue')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                                Blue Saber Template
+                            </button>
+                            <button id="btnPresetRed" class="btn btn-secondary" style="justify-content: flex-start;" onclick="loadPreset('red')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                                Red Saber Template
+                            </button>
+                            <button id="btnPresetRainbow" class="btn btn-secondary" style="justify-content: flex-start;" onclick="loadPreset('rainbow')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                                Rainbow Saber Template
+                            </button>
+                            <button id="btnPresetMinimal" class="btn btn-secondary" style="justify-content: flex-start;" onclick="loadPreset('minimal')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+                                Minimal Template
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3 class="panel-section-title font-display">Discord Community</h3>
+                        <p style="color: var(--fg-secondary); margin-bottom: 12px; font-size: 0.9rem;">Join our Discord to share presets, get help, and stay updated!</p>
+                        <a href="https://discord.gg/cWr7qmPtzq" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="width: 100%;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.675 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.083.083 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-.199.076.076 0 0 0 .041-.106 13.107 13.107 0 0 0-.182-.814.077.077 0 0 1-.007-.128 10.2 10.2 0 0 1 .362-.964.073.073 0 0 1 .077-.03c3.928-1.795 7.18-3.559 9.086-5.334a.077.077 0 0 1 .078.03c.12.166.252.321.38.477a.076.076 0 0 0 .085-.028 13.981 13.981 0 0 0 .25-.772.077.077 0 0 1 .037-.087 18.246 18.246 0 0 0 2.371-3.527.075.075 0 0 0-.032-.083z"/>
+                            </svg>
+                            Join Discord
+                        </a>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // ============================================================================
+        // State Management
+        // ============================================================================
+        const state = {
+            activeSaber: 'left',
+            syncSabers: true,
+            presets: {
+                left: getDefaultPreset('left'),
+                right: getDefaultPreset('right')
+            }
+        };
+
+        // Driver type enum matching C++
+        const DRIVER_TYPES = [
+            { value: 0, label: 'None' },
+            { value: 1, label: 'Tip Velocity' },
+            { value: 2, label: 'Swings Per Second' },
+            { value: 3, label: 'Time Dependence' },
+            { value: 4, label: 'Tip Acceleration' },
+            { value: 5, label: 'Angular Velocity' },
+            { value: 6, label: 'Score Percentage' },
+            { value: 7, label: 'Combo' },
+            { value: 8, label: 'Misses' },
+            { value: 9, label: 'Energy' },
+            { value: 10, label: 'Multiplier' },
+            { value: 11, label: 'Cut Score' },
+            { value: 12, label: 'Accuracy' },
+            { value: 13, label: 'Pre-Cut Score' },
+            { value: 14, label: 'Post-Cut Score' },
+            { value: 15, label: 'Cuts Per Second' },
+            { value: 16, label: 'Time After Cut' },
+            { value: 17, label: 'Direction X' },
+            { value: 18, label: 'Direction Y' },
+            { value: 19, label: 'Direction Z' }
+        ];
+
+        const BLENDING_MODES = [
+            { value: 0, label: 'Additive' },
+            { value: 1, label: 'Alpha Blend' },
+            { value: 2, label: 'Premultiplied Alpha' },
+            { value: 3, label: 'Multiply' },
+            { value: 4, label: 'Soft Add' }
+        ];
+
+        const TRAIL_TYPES = [
+            { value: 0, label: 'Tip Trail (Billboard)' },
+            { value: 1, label: 'Blade Trail (Ribbon)' }
+        ];
+
+        // ============================================================================
+        // Default Preset Generator
+        // ============================================================================
+        function getDefaultPreset(side) {
+            const isLeft = side === 'left';
+            return {
+                id: crypto.randomUUID(),
+                name: isLeft ? 'Left Saber' : 'Right Saber',
+                author: 'FreeSabers User',
+                description: '',
+                version: 2,
+                transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                keepVanillaModel: false,
+                blade: {
+                    enabled: true,
+                    zOffsetFrom: -0.17,
+                    zOffsetTo: 1.0,
+                    radius: 0.0132,
+                    stretchBias: 4.0,
+                    profile: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                    startCap: true,
+                    endCap: true,
+                    verticalResolution: 20,
+                    horizontalResolution: 10,
+                    baseColor: { r: 0, g: 0.8, b: 1, a: 1 },
+                    emissionColor: { r: 0, g: 0.8, b: 1, a: 1 },
+                    emissionIntensity: 2.0,
+                    reflectionColor: { r: 0.05, g: 0.005, b: 0.005, a: 0 },
+                    envLightColor: { r: 1, g: 1, b: 1, a: 1 },
+                    fresnelPower: 5.0,
+                    metallic: 0.0,
+                    roughness: 0.43,
+                    envLightIntensity: 1.0,
+                    reflectionIntensity: 1.0,
+                    normalMapIntensity: 1.0,
+                    sceneReflections: false,
+                    sceneLights: false,
+                    glowMultiplier: 1.0,
+                    handleColor: { r: 0.1, g: 0.1, b: 0.1, a: 0 },
+                    handleRoughness: 2.0,
+                    renderQueue: 3002,
+                    cullMode: 0,
+                    depthWrite: false,
+                    blurFrames: 2.0,
+                    blurSensitivity: 0.6,
+                    colorOverValue: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                    alphaOverValue: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                    scaleOverValue: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                    valueFrom: 0.0,
+                    valueTo: 1.0,
+                    handleMask: { interpolationType: 1, points: [] },
+                    bladeMaskResolution: 48,
+                    drivers: [],
+                    tiling: { x: 1, y: 1 },
+                    uvScroll: { x: 0, y: 0 },
+                    useTexture: false,
+                    texturePath: '',
+                    colorOverride: {
+                        force: false,
+                        type: 0,
+                        hue: 0,
+                        saturation: 1,
+                        value: 1,
+                        hueShiftPerSecond: 0,
+                        fakeGlowMultiplier: 1,
+                        colorSource: 0
+                    }
+                },
+                trails: [
+                    {
+                        enabled: true,
+                        name: 'Blade Trail',
+                        trailType: 1,
+                        length: 0.22,
+                        width: 0.02,
+                        offset: 1.0,
+                        distortionMultiplier: 0.5,
+                        horizontalResolution: 4,
+                        verticalResolution: 80,
+                        blendingMode: 0,
+                        alwaysOnTop: false,
+                        renderQueue: 3000,
+                        minVertexDistance: 0.004,
+                        colorOverAge: { interpolationType: 1, points: [
+                            { time: 0, value: { r: 1, g: 1, b: 1, a: 1 } },
+                            { time: 1, value: { r: 1, g: 1, b: 1, a: 0 } }
+                        ] },
+                        alphaOverAge: { interpolationType: 1, points: [] },
+                        widthOverAge: { interpolationType: 1, points: [] },
+                        speedWidth: 0,
+                        speedAlpha: 0.25,
+                        blurFrames: 2.0,
+                        useTexture: false,
+                        texturePath: '',
+                        tiling: { x: 1, y: 1 },
+                        uvScroll: { x: 0, y: 0 },
+                        transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                        drivers: []
+                    },
+                    {
+                        enabled: true,
+                        name: 'Tip Trail',
+                        trailType: 0,
+                        length: 0.15,
+                        width: 0.015,
+                        offset: 1.0,
+                        distortionMultiplier: 0.3,
+                        horizontalResolution: 4,
+                        verticalResolution: 60,
+                        blendingMode: 0,
+                        alwaysOnTop: false,
+                        renderQueue: 3000,
+                        minVertexDistance: 0.004,
+                        colorOverAge: { interpolationType: 1, points: [
+                            { time: 0, value: { r: 1, g: 1, b: 1, a: 1 } },
+                            { time: 1, value: { r: 1, g: 1, b: 1, a: 0 } }
+                        ] },
+                        alphaOverAge: { interpolationType: 1, points: [] },
+                        widthOverAge: { interpolationType: 1, points: [] },
+                        speedWidth: 0.5,
+                        speedAlpha: 0.3,
+                        blurFrames: 1.5,
+                        useTexture: false,
+                        texturePath: '',
+                        tiling: { x: 1, y: 1 },
+                        uvScroll: { x: 0, y: 0 },
+                        transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                        drivers: []
+                    }
+                ],
+                sparks: {
+                    enabled: true,
+                    count: 96,
+                    size: 0.03,
+                    minLifetime: 0.1,
+                    maxLifetime: 0.5,
+                    velocity: 1.5,
+                    spread: 35.0,
+                    trailLength: 0.15,
+                    trailWidth: 0.05,
+                    gravityY: 0.0,
+                    damping: 1.5,
+                    turbulencePower: 0.0,
+                    turbulenceScale: 4.0,
+                    emissionMode: 1,
+                    triggerPercentage: 0.7,
+                    triggerPeriod: 0.05,
+                    burstSpread: 0.8,
+                    color: { r: 1, g: 1, b: 1, a: 1 },
+                    colorOverLifetime: { interpolationType: 1, points: [] },
+                    alphaOverLifetime: { interpolationType: 1, points: [] },
+                    scaleOverLifetime: { interpolationType: 1, points: [] },
+                    transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                    drivers: [],
+                    useTexture: false,
+                    texturePath: ''
+                },
+                glow: {
+                    enabled: true,
+                    intensity: 1.5,
+                    radius: 0.4,
+                    color: { r: 0, g: 0.8, b: 1, a: 1 },
+                    pulseGradient: { interpolationType: 1, points: [] },
+                    pulseEnabled: false,
+                    pulseSpeed: 1.0,
+                    pulseAmount: 0.35,
+                    useLight: false,
+                    lightRange: 2.0
+                },
+                bolts: {
+                    enabled: false,
+                    joints: 4,
+                    spacing: 0.06,
+                    size: 0.02,
+                    stiffness: 60.0,
+                    damping: 8.0,
+                    gravityY: -1.5,
+                    color: { r: 1, g: 1, b: 1, a: 1 }
+                },
+                drivers: []
+            };
+        }
+
+        // ============================================================================
+        // Utility Functions
+        // ============================================================================
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16) / 255,
+                g: parseInt(result[2], 16) / 255,
+                b: parseInt(result[3], 16) / 255,
+                a: 1
+            } : { r: 1, g: 1, b: 1, a: 1 };
+        }
+
+        function rgbToHex(r, g, b) {
+            const toHex = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0');
+            return '#' + toHex(r) + toHex(g) + toHex(b);
+        }
+
+        function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icons = { success: '✓', error: '✕', warning: '⚠' };
+            toast.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-message">${message}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        function formatJson(obj) {
+            return JSON.stringify(obj, null, 2)
+                .replace(/"([^"]+)":/g, '<span class="key">"$1"</span>:')
+                .replace(/:\s*"([^"]*)"/g, ': <span class="string">"$1"</span>')
+                .replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="number">$1</span>')
+                .replace(/:\s*(true|false)/g, ': <span class="boolean">$1</span>')
+                .replace(/:\s*null/g, ': <span class="null">null</span>');
+        }
+
+        // ============================================================================
+        // Curve Editor
+        // ============================================================================
+        const curveEditors = new Map();
+
+        function initCurveEditor(id, curve, onChange) {
+            const container = document.getElementById(id);
+            const canvas = document.createElement('canvas');
+            container.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                const rect = container.getBoundingClientRect();
+                canvas.width = rect.width * devicePixelRatio;
+                canvas.height = rect.height * devicePixelRatio;
+                canvas.style.width = rect.width + 'px';
+                canvas.style.height = rect.height + 'px';
+                draw();
+            }
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                // Grid
+                ctx.strokeStyle = '#2a2a3a';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 4; i++) {
+                    const y = (h / 4) * i;
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+                    const x = (w / 4) * i;
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+                }
+
+                // Curve
+                if (curve.points.length > 0) {
+                    const points = [...curve.points].sort((a, b) => a.time - b.time);
+                    ctx.strokeStyle = '#00aaff';
+                    ctx.lineWidth = 2 * devicePixelRatio;
+                    ctx.beginPath();
+                    for (let i = 0; i < points.length; i++) {
+                        const x = (points[i].time / curve.valueTo) * w;
+                        const y = h - (points[i].value / Math.max(curve.valueTo, 0.001)) * h;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+
+                    // Points
+                    ctx.fillStyle = '#00ff88';
+                    points.forEach(p => {
+                        const x = (p.time / curve.valueTo) * w;
+                        const y = h - (p.value / Math.max(curve.valueTo, 0.001)) * h;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5 * devicePixelRatio, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+
+                // Value range lines
+                ctx.strokeStyle = '#606070';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5 * devicePixelRatio, 5 * devicePixelRatio]);
+                ctx.beginPath();
+                ctx.moveTo(0, h * 0.5);
+                ctx.lineTo(w, h * 0.5);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            let draggingPoint = -1;
+
+            function getPointAt(x, y) {
+                const points = [...curve.points].sort((a, b) => a.time - b.time);
+                for (let i = 0; i < points.length; i++) {
+                    const px = (points[i].time / curve.valueTo) * canvas.width;
+                    const py = canvas.height - (points[i].value / Math.max(curve.valueTo, 0.001)) * canvas.height;
+                    if (Math.hypot(px - x, py - y) < 15 * devicePixelRatio) return i;
+                }
+                return -1;
+            }
+
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * devicePixelRatio;
+                const y = (e.clientY - rect.top) * devicePixelRatio;
+                draggingPoint = getPointAt(x, y);
+                if (draggingPoint === -1 && e.shiftKey) {
+                    // Add point
+                    const time = clamp((x / canvas.width) * curve.valueTo, 0, curve.valueTo);
+                    const value = clamp((1 - y / canvas.height) * curve.valueTo, 0, curve.valueTo);
+                    curve.points.push({ time, value });
+                    curve.points.sort((a, b) => a.time - b.time);
+                    updateCurvePointsUI(id, curve);
+                    onChange();
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (draggingPoint === -1) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * devicePixelRatio;
+                const y = (e.clientY - rect.top) * devicePixelRatio;
+                const time = clamp((x / canvas.width) * curve.valueTo, 0, curve.valueTo);
+                const value = clamp((1 - y / canvas.height) * curve.valueTo, 0, curve.valueTo);
+                const points = [...curve.points].sort((a, b) => a.time - b.time);
+                points[draggingPoint].time = time;
+                points[draggingPoint].value = value;
+                curve.points = points;
+                curve.points.sort((a, b) => a.time - b.time);
+                updateCurvePointsUI(id, curve);
+                draw();
+                onChange();
+            });
+
+            window.addEventListener('mouseup', () => { draggingPoint = -1; });
+
+            curveEditors.set(id, { canvas, ctx, curve, resize, draw, onChange });
+            resize();
+            window.addEventListener('resize', resize);
+            return { resize, draw };
+        }
+
+        function updateCurvePointsUI(id, curve) {
+            const container = document.getElementById(id + 'Points');
+            if (!container) return;
+            container.innerHTML = '';
+            const points = [...curve.points].sort((a, b) => a.time - b.time);
+            points.forEach((point, index) => {
+                const div = document.createElement('div');
+                div.className = 'curve-point';
+                div.innerHTML = `
+                    <input type="number" step="0.01" value="${point.time.toFixed(2)}" data-index="${index}" data-prop="time" style="width: 55px;">
+                    <input type="number" step="0.01" value="${point.value.toFixed(2)}" data-index="${index}" data-prop="value" style="width: 55px;">
+                    <button type="button" data-index="${index}">✕</button>
+                `;
+                container.appendChild(div);
+            });
+            container.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', () => {
+                    const idx = parseInt(input.dataset.index);
+                    const prop = input.dataset.prop;
+                    const points = [...curve.points].sort((a, b) => a.time - b.time);
+                    points[idx][prop] = parseFloat(input.value);
+                    curve.points = points;
+                    curve.points.sort((a, b) => a.time - b.time);
+                    const editor = curveEditors.get(id);
+                    if (editor) editor.draw();
+                    editor.onChange();
+                    updateCurvePointsUI(id, curve);
+                });
+            });
+            container.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.index);
+                    const points = [...curve.points].sort((a, b) => a.time - b.time);
+                    points.splice(idx, 1);
+                    curve.points = points;
+                    const editor = curveEditors.get(id);
+                    if (editor) editor.draw();
+                    editor.onChange();
+                    updateCurvePointsUI(id, curve);
+                });
+            });
+        }
+
+        function addCurvePoint(id) {
+            const editor = curveEditors.get(id);
+            if (!editor) return;
+            const curve = editor.curve;
+            curve.points.push({ time: 0.5, value: 0.5 });
+            curve.points.sort((a, b) => a.time - b.time);
+            updateCurvePointsUI(id, curve);
+            editor.draw();
+            editor.onChange();
+        }
+
+        // ============================================================================
+        // Gradient Editor
+        // ============================================================================
+        const gradientEditors = new Map();
+
+        function initGradientEditor(id, gradient, onChange) {
+            const container = document.getElementById(id);
+            const canvas = document.createElement('canvas');
+            container.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                const rect = container.getBoundingClientRect();
+                canvas.width = rect.width * devicePixelRatio;
+                canvas.height = rect.height * devicePixelRatio;
+                canvas.style.width = rect.width + 'px';
+                canvas.style.height = rect.height + 'px';
+                draw();
+            }
+
+            function draw() {
+                const w = canvas.width, h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+
+                // Draw gradient
+                const points = [...gradient.points].sort((a, b) => a.time - b.time);
+                if (points.length >= 2) {
+                    const grad = ctx.createLinearGradient(0, 0, w, 0);
+                    points.forEach(p => {
+                        const c = p.value;
+                        grad.addColorStop(p.time, `rgba(${c.r*255},${c.g*255},${c.b*255},${c.a})`);
+                    });
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(0, 0, w, h);
+                } else if (points.length === 1) {
+                    const c = points[0].value;
+                    ctx.fillStyle = `rgba(${c.r*255},${c.g*255},${c.b*255},${c.a})`;
+                    ctx.fillRect(0, 0, w, h);
+                } else {
+                    // Default checkerboard
+                    const size = 10 * devicePixelRatio;
+                    for (let x = 0; x < w; x += size * 2) {
+                        for (let y = 0; y < h; y += size * 2) {
+                            ctx.fillStyle = ((x + y) / size) % 2 === 0 ? '#2a2a3a' : '#1a1a24';
+                            ctx.fillRect(x, y, size, size);
+                        }
+                    }
+                }
+
+                // Stops
+                points.forEach((p, i) => {
+                    const x = p.time * w;
+                    ctx.fillStyle = `rgba(${p.value.r*255},${p.value.g*255},${p.value.b*255},${p.value.a})`;
+                    ctx.beginPath();
+                    ctx.moveTo(x - 8, 0);
+                    ctx.lineTo(x + 8, 0);
+                    ctx.lineTo(x, 12);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Selected indicator
+                    if (gradient._selected === i) {
+                        ctx.strokeStyle = '#00ff88';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(x, 6, 10, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                });
+            }
+
+            let draggingStop = -1;
+
+            function getStopAt(x) {
+                const points = [...gradient.points].sort((a, b) => a.time - b.time);
+                for (let i = 0; i < points.length; i++) {
+                    const px = points[i].time * canvas.width;
+                    if (Math.abs(px - x) < 15 * devicePixelRatio) return i;
+                }
+                return -1;
+            }
+
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * devicePixelRatio;
+                draggingStop = getStopAt(x);
+                if (draggingStop !== -1) {
+                    gradient._selected = draggingStop;
+                    draw();
+                    updateGradientStopsUI(id, gradient);
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (draggingStop === -1) return;
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * devicePixelRatio;
+                const time = clamp(x / canvas.width, 0, 1);
+                const points = [...gradient.points].sort((a, b) => a.time - b.time);
+                points[draggingStop].time = time;
+                gradient.points = points;
+                gradient.points.sort((a, b) => a.time - b.time);
+                draw();
+                onChange();
+            });
+
+            window.addEventListener('mouseup', () => { draggingStop = -1; });
+
+            gradientEditors.set(id, { canvas, ctx, gradient, resize, draw, onChange });
+            resize();
+            window.addEventListener('resize', resize);
+        }
+
+        function updateGradientStopsUI(id, gradient) {
+            const container = document.getElementById(id + 'Stops');
+            if (!container) return;
+            container.innerHTML = '';
+            const points = [...gradient.points].sort((a, b) => a.time - b.time);
+            points.forEach((point, index) => {
+                const div = document.createElement('div');
+                div.className = 'gradient-stop';
+                const hex = rgbToHex(point.value.r, point.value.g, point.value.b);
+                div.innerHTML = `
+                    <div class="stop-header">
+                        <input type="color" value="${hex}" data-index="${index}" data-prop="color">
+                        <input type="number" step="0.01" min="0" max="1" value="${point.time.toFixed(2)}" data-index="${index}" data-prop="time" style="width: 55px;">
+                        <button type="button" data-index="${index}">✕</button>
+                    </div>
+                    <input type="number" step="0.01" min="0" max="1" value="${point.value.a.toFixed(2)}" data-index="${index}" data-prop="alpha" placeholder="Alpha" style="width: 55px;">
+                `;
+                container.appendChild(div);
+            });
+            container.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', () => {
+                    const idx = parseInt(input.dataset.index);
+                    const prop = input.dataset.prop;
+                    const points = [...gradient.points].sort((a, b) => a.time - b.time);
+                    if (prop === 'color') {
+                        const rgb = hexToRgb(input.value);
+                        points[idx].value.r = rgb.r;
+                        points[idx].value.g = rgb.g;
+                        points[idx].value.b = rgb.b;
+                    } else if (prop === 'time') {
+                        points[idx].time = parseFloat(input.value);
+                    } else if (prop === 'alpha') {
+                        points[idx].value.a = parseFloat(input.value);
+                    }
+                    gradient.points = points;
+                    gradient.points.sort((a, b) => a.time - b.time);
+                    const editor = gradientEditors.get(id);
+                    if (editor) editor.draw();
+                    editor.onChange();
+                    updateGradientStopsUI(id, gradient);
+                });
+            });
+            container.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.index);
+                    const points = [...gradient.points].sort((a, b) => a.time - b.time);
+                    points.splice(idx, 1);
+                    gradient.points = points;
+                    const editor = gradientEditors.get(id);
+                    if (editor) editor.draw();
+                    editor.onChange();
+                    updateGradientStopsUI(id, gradient);
+                });
+            });
+        }
+
+        function addGradientStop(id) {
+            const editor = gradientEditors.get(id);
+            if (!editor) return;
+            const gradient = editor.gradient;
+            gradient.points.push({ time: 0.5, value: { r: 1, g: 1, b: 1, a: 1 } });
+            gradient.points.sort((a, b) => a.time - b.time);
+            updateGradientStopsUI(id, gradient);
+            editor.draw();
+            editor.onChange();
+        }
+
+        // ============================================================================
+        // UI Sync Functions
+        // ============================================================================
+        function getCurrentPreset() {
+            return state.presets[state.activeSaber];
+        }
+
+        function setCurrentPreset(preset) {
+            state.presets[state.activeSaber] = preset;
+            if (state.syncSabers) {
+                const other = state.activeSaber === 'left' ? 'right' : 'left';
+                state.presets[other] = JSON.parse(JSON.stringify(preset));
+                state.presets[other].id = crypto.randomUUID();
+                state.presets[other].name = other === 'left' ? 'Left Saber' : 'Right Saber';
+            }
+            updateAllUI();
+        }
+
+        function selectSaber(side) {
+            state.activeSaber = side;
+            document.getElementById('tabLeft').classList.toggle('active', side === 'left');
+            document.getElementById('tabLeft').setAttribute('aria-selected', side === 'left');
+            document.getElementById('tabRight').classList.toggle('active', side === 'right');
+            document.getElementById('tabRight').setAttribute('aria-selected', side === 'right');
+            updateAllUI();
+        }
+
+        function updateAllUI() {
+            const preset = getCurrentPreset();
+            syncPresetToUI(preset);
+            updateJSONOutput();
+            updatePreview();
+        }
+
+        function syncPresetToUI(p) {
+            // Meta
+            document.getElementById('saberName').value = p.name;
+            document.getElementById('saberAuthor').value = p.author;
+            document.getElementById('saberDescription').value = p.description || '';
+
+            // Blade
+            document.getElementById('bladeEnabled').checked = p.blade.enabled;
+            document.getElementById('bladeBaseColor').value = rgbToHex(p.blade.baseColor.r, p.blade.baseColor.g, p.blade.baseColor.b);
+            document.getElementById('bladeBaseColorHex').value = rgbToHex(p.blade.baseColor.r, p.blade.baseColor.g, p.blade.baseColor.b);
+            document.getElementById('bladeEmissionColor').value = rgbToHex(p.blade.emissionColor.r, p.blade.emissionColor.g, p.blade.emissionColor.b);
+            document.getElementById('bladeEmissionColorHex').value = rgbToHex(p.blade.emissionColor.r, p.blade.emissionColor.g, p.blade.emissionColor.b);
+            document.getElementById('bladeEmissionIntensity').value = p.blade.emissionIntensity;
+            document.getElementById('bladeEmissionIntensityVal').textContent = p.blade.emissionIntensity.toFixed(1);
+            document.getElementById('bladeRadius').value = p.blade.radius;
+            document.getElementById('bladeRadiusVal').textContent = p.blade.radius.toFixed(4);
+            document.getElementById('bladeStretchBias').value = p.blade.stretchBias;
+            document.getElementById('bladeStretchBiasVal').textContent = p.blade.stretchBias.toFixed(1);
+            document.getElementById('bladeFresnelPower').value = p.blade.fresnelPower;
+            document.getElementById('bladeFresnelPowerVal').textContent = p.blade.fresnelPower.toFixed(1);
+            document.getElementById('bladeMetallic').value = p.blade.metallic;
+            document.getElementById('bladeMetallicVal').textContent = p.blade.metallic.toFixed(2);
+            document.getElementById('bladeRoughness').value = p.blade.roughness;
+            document.getElementById('bladeRoughnessVal').textContent = p.blade.roughness.toFixed(2);
+            document.getElementById('bladeRenderQueue').value = p.blade.renderQueue;
+            document.getElementById('bladeBlurFrames').value = p.blade.blurFrames;
+            document.getElementById('bladeBlurFramesVal').textContent = p.blade.blurFrames.toFixed(1);
+            document.getElementById('bladeColorOverrideEnabled').checked = p.blade.colorOverride.force;
+            document.getElementById('bladeColorOverrideOptions').classList.toggle('hidden', !p.blade.colorOverride.force);
+            if (p.blade.colorOverride.force) {
+                document.getElementById('bladeColorOverrideType').value = p.blade.colorOverride.type;
+                document.getElementById('bladeColorOverrideHue').value = p.blade.colorOverride.hue;
+                document.getElementById('bladeColorOverrideHueVal').textContent = p.blade.colorOverride.hue.toFixed(2);
+                document.getElementById('bladeColorOverrideSat').value = p.blade.colorOverride.saturation;
+                document.getElementById('bladeColorOverrideSatVal').textContent = p.blade.colorOverride.saturation.toFixed(2);
+                document.getElementById('bladeColorOverrideVal').value = p.blade.colorOverride.value;
+                document.getElementById('bladeColorOverrideValVal').textContent = p.blade.colorOverride.value.toFixed(2);
+                document.getElementById('bladeColorOverrideShift').value = p.blade.colorOverride.hueShiftPerSecond;
+                document.getElementById('bladeColorOverrideShiftVal').textContent = p.blade.colorOverride.hueShiftPerSecond.toFixed(1);
+                document.getElementById('bladeColorOverrideGlow').value = p.blade.colorOverride.fakeGlowMultiplier;
+                document.getElementById('bladeColorOverrideGlowVal').textContent = p.blade.colorOverride.fakeGlowMultiplier.toFixed(1);
+            }
+
+            // Update curve editors
+            const bladeProfileEditor = curveEditors.get('bladeProfileCurve');
+            if (bladeProfileEditor) {
+                bladeProfileEditor.curve = p.blade.profile;
+                bladeProfileEditor.draw();
+                updateCurvePointsUI('bladeProfileCurve', p.blade.profile);
+            }
+
+            // Trails
+            renderTrailsList(p.trails);
+
+            // Sparks
+            document.getElementById('sparksEnabled').checked = p.sparks.enabled;
+            document.getElementById('sparksCount').value = p.sparks.count;
+            document.getElementById('sparksSize').value = p.sparks.size;
+            document.getElementById('sparksSizeVal').textContent = p.sparks.size.toFixed(3);
+            document.getElementById('sparksMinLifetime').value = p.sparks.minLifetime;
+            document.getElementById('sparksMinLifetimeVal').textContent = p.sparks.minLifetime.toFixed(2);
+            document.getElementById('sparksMaxLifetime').value = p.sparks.maxLifetime;
+            document.getElementById('sparksMaxLifetimeVal').textContent = p.sparks.maxLifetime.toFixed(2);
+            document.getElementById('sparksVelocity').value = p.sparks.velocity;
+            document.getElementById('sparksVelocityVal').textContent = p.sparks.velocity.toFixed(1);
+            document.getElementById('sparksSpread').value = p.sparks.spread;
+            document.getElementById('sparksSpreadVal').textContent = p.sparks.spread.toFixed(0);
+            document.getElementById('sparksGravity').value = p.sparks.gravityY;
+            document.getElementById('sparksGravityVal').textContent = p.sparks.gravityY.toFixed(1);
+            document.getElementById('sparksDamping').value = p.sparks.damping;
+            document.getElementById('sparksDampingVal').textContent = p.sparks.damping.toFixed(1);
+            document.getElementById('sparksTurbPower').value = p.sparks.turbulencePower;
+            document.getElementById('sparksTurbPowerVal').textContent = p.sparks.turbulencePower.toFixed(1);
+            document.getElementById('sparksTurbScale').value = p.sparks.turbulenceScale;
+            document.getElementById('sparksTurbScaleVal').textContent = p.sparks.turbulenceScale.toFixed(1);
+            document.getElementById('sparksEmissionMode').value = p.sparks.emissionMode;
+            document.getElementById('sparksTriggerPct').value = p.sparks.triggerPercentage;
+            document.getElementById('sparksTriggerPctVal').textContent = p.sparks.triggerPercentage.toFixed(2);
+            document.getElementById('sparksTriggerPeriod').value = p.sparks.triggerPeriod;
+            document.getElementById('sparksTriggerPeriodVal').textContent = p.sparks.triggerPeriod.toFixed(2);
+            document.getElementById('sparksColor').value = rgbToHex(p.sparks.color.r, p.sparks.color.g, p.sparks.color.b);
+            document.getElementById('sparksColorHex').value = rgbToHex(p.sparks.color.r, p.sparks.color.g, p.sparks.color.b);
+
+            const sparksColorEditor = gradientEditors.get('sparksColorGradient');
+            if (sparksColorEditor) {
+                sparksColorEditor.gradient = p.sparks.colorOverLifetime;
+                sparksColorEditor.draw();
+                updateGradientStopsUI('sparksColorGradient', p.sparks.colorOverLifetime);
+            }
+
+            // Glow
+            document.getElementById('glowEnabled').checked = p.glow.enabled;
+            document.getElementById('glowIntensity').value = p.glow.intensity;
+            document.getElementById('glowIntensityVal').textContent = p.glow.intensity.toFixed(1);
+            document.getElementById('glowRadius').value = p.glow.radius;
+            document.getElementById('glowRadiusVal').textContent = p.glow.radius.toFixed(2);
+            document.getElementById('glowColor').value = rgbToHex(p.glow.color.r, p.glow.color.g, p.glow.color.b);
+            document.getElementById('glowColorHex').value = rgbToHex(p.glow.color.r, p.glow.color.g, p.glow.color.b);
+            document.getElementById('glowPulseEnabled').checked = p.glow.pulseEnabled;
+            document.getElementById('glowPulseOptions').classList.toggle('hidden', !p.glow.pulseEnabled);
+            if (p.glow.pulseEnabled) {
+                document.getElementById('glowPulseSpeed').value = p.glow.pulseSpeed;
+                document.getElementById('glowPulseSpeedVal').textContent = p.glow.pulseSpeed.toFixed(1);
+                document.getElementById('glowPulseAmount').value = p.glow.pulseAmount;
+                document.getElementById('glowPulseAmountVal').textContent = p.glow.pulseAmount.toFixed(2);
+            }
+
+            // Bolts
+            document.getElementById('boltsEnabled').checked = p.bolts.enabled;
+            document.getElementById('boltsOptions').classList.toggle('hidden', !p.bolts.enabled);
+            if (p.bolts.enabled) {
+                document.getElementById('boltsJoints').value = p.bolts.joints;
+                document.getElementById('boltsSpacing').value = p.bolts.spacing;
+                document.getElementById('boltsSpacingVal').textContent = p.bolts.spacing.toFixed(3);
+                document.getElementById('boltsSize').value = p.bolts.size;
+                document.getElementById('boltsSizeVal').textContent = p.bolts.size.toFixed(3);
+                document.getElementById('boltsStiffness').value = p.bolts.stiffness;
+                document.getElementById('boltsStiffnessVal').textContent = p.bolts.stiffness.toFixed(0);
+                document.getElementById('boltsDamping').value = p.bolts.damping;
+                document.getElementById('boltsDampingVal').textContent = p.bolts.damping.toFixed(1);
+                document.getElementById('boltsGravity').value = p.bolts.gravityY;
+                document.getElementById('boltsGravityVal').textContent = p.bolts.gravityY.toFixed(1);
+                document.getElementById('boltsColor').value = rgbToHex(p.bolts.color.r, p.bolts.color.g, p.bolts.color.b);
+                document.getElementById('boltsColorHex').value = rgbToHex(p.bolts.color.r, p.bolts.color.g, p.bolts.color.b);
+            }
+
+            // Global Drivers
+            renderDriversList('globalDriversList', p.drivers, 'global');
+        }
+
+        function syncUIToPreset(p) {
+            // Meta
+            p.name = document.getElementById('saberName').value || 'Unnamed Saber';
+            p.author = document.getElementById('saberAuthor').value || 'Unknown';
+            p.description = document.getElementById('saberDescription').value;
+
+            // Blade
+            p.blade.enabled = document.getElementById('bladeEnabled').checked;
+            const baseHex = document.getElementById('bladeBaseColor').value;
+            const baseRgb = hexToRgb(baseHex);
+            p.blade.baseColor = { ...baseRgb, a: p.blade.baseColor.a };
+            const emissionHex = document.getElementById('bladeEmissionColor').value;
+            const emissionRgb = hexToRgb(emissionHex);
+            p.blade.emissionColor = { ...emissionRgb, a: p.blade.emissionColor.a };
+            p.blade.emissionIntensity = parseFloat(document.getElementById('bladeEmissionIntensity').value);
+            p.blade.radius = parseFloat(document.getElementById('bladeRadius').value);
+            p.blade.stretchBias = parseFloat(document.getElementById('bladeStretchBias').value);
+            p.blade.fresnelPower = parseFloat(document.getElementById('bladeFresnelPower').value);
+            p.blade.metallic = parseFloat(document.getElementById('bladeMetallic').value);
+            p.blade.roughness = parseFloat(document.getElementById('bladeRoughness').value);
+            p.blade.renderQueue = parseInt(document.getElementById('bladeRenderQueue').value);
+            p.blade.blurFrames = parseFloat(document.getElementById('bladeBlurFrames').value);
+            p.blade.colorOverride.force = document.getElementById('bladeColorOverrideEnabled').checked;
+            if (p.blade.colorOverride.force) {
+                p.blade.colorOverride.type = parseInt(document.getElementById('bladeColorOverrideType').value);
+                p.blade.colorOverride.hue = parseFloat(document.getElementById('bladeColorOverrideHue').value);
+                p.blade.colorOverride.saturation = parseFloat(document.getElementById('bladeColorOverrideSat').value);
+                p.blade.colorOverride.value = parseFloat(document.getElementById('bladeColorOverrideVal').value);
+                p.blade.colorOverride.hueShiftPerSecond = parseFloat(document.getElementById('bladeColorOverrideShift').value);
+                p.blade.colorOverride.fakeGlowMultiplier = parseFloat(document.getElementById('bladeColorOverrideGlow').value);
+            }
+
+            // Trails - handled by trail item event listeners
+
+            // Sparks
+            p.sparks.enabled = document.getElementById('sparksEnabled').checked;
+            p.sparks.count = parseInt(document.getElementById('sparksCount').value);
+            p.sparks.size = parseFloat(document.getElementById('sparksSize').value);
+            p.sparks.minLifetime = parseFloat(document.getElementById('sparksMinLifetime').value);
+            p.sparks.maxLifetime = parseFloat(document.getElementById('sparksMaxLifetime').value);
+            p.sparks.velocity = parseFloat(document.getElementById('sparksVelocity').value);
+            p.sparks.spread = parseFloat(document.getElementById('sparksSpread').value);
+            p.sparks.gravityY = parseFloat(document.getElementById('sparksGravity').value);
+            p.sparks.damping = parseFloat(document.getElementById('sparksDamping').value);
+            p.sparks.turbulencePower = parseFloat(document.getElementById('sparksTurbPower').value);
+            p.sparks.turbulenceScale = parseFloat(document.getElementById('sparksTurbScale').value);
+            p.sparks.emissionMode = parseInt(document.getElementById('sparksEmissionMode').value);
+            p.sparks.triggerPercentage = parseFloat(document.getElementById('sparksTriggerPct').value);
+            p.sparks.triggerPeriod = parseFloat(document.getElementById('sparksTriggerPeriod').value);
+            const sparksColorHex = document.getElementById('sparksColor').value;
+            const sparksColorRgb = hexToRgb(sparksColorHex);
+            p.sparks.color = { ...sparksColorRgb, a: p.sparks.color.a };
+
+            // Glow
+            p.glow.enabled = document.getElementById('glowEnabled').checked;
+            p.glow.intensity = parseFloat(document.getElementById('glowIntensity').value);
+            p.glow.radius = parseFloat(document.getElementById('glowRadius').value);
+            const glowColorHex = document.getElementById('glowColor').value;
+            const glowColorRgb = hexToRgb(glowColorHex);
+            p.glow.color = { ...glowColorRgb, a: p.glow.color.a };
+            p.glow.pulseEnabled = document.getElementById('glowPulseEnabled').checked;
+            if (p.glow.pulseEnabled) {
+                p.glow.pulseSpeed = parseFloat(document.getElementById('glowPulseSpeed').value);
+                p.glow.pulseAmount = parseFloat(document.getElementById('glowPulseAmount').value);
+            }
+
+            // Bolts
+            p.bolts.enabled = document.getElementById('boltsEnabled').checked;
+            if (p.bolts.enabled) {
+                p.bolts.joints = parseInt(document.getElementById('boltsJoints').value);
+                p.bolts.spacing = parseFloat(document.getElementById('boltsSpacing').value);
+                p.bolts.size = parseFloat(document.getElementById('boltsSize').value);
+                p.bolts.stiffness = parseFloat(document.getElementById('boltsStiffness').value);
+                p.bolts.damping = parseFloat(document.getElementById('boltsDamping').value);
+                p.bolts.gravityY = parseFloat(document.getElementById('boltsGravity').value);
+                const boltsColorHex = document.getElementById('boltsColor').value;
+                const boltsColorRgb = hexToRgb(boltsColorHex);
+                p.bolts.color = { ...boltsColorRgb, a: p.bolts.color.a };
+            }
+
+            // Global Drivers
+            p.drivers = collectDriversFromList('globalDriversList', 'global');
+        }
+
+        // ============================================================================
+        // Trails List Rendering
+        // ============================================================================
+        function renderTrailsList(trails) {
+            const container = document.getElementById('trailsList');
+            container.innerHTML = '';
+            trails.forEach((trail, index) => {
+                const div = document.createElement('div');
+                div.className = 'trail-item';
+                div.dataset.index = index;
+                div.innerHTML = `
+                    <div class="trail-header">
+                        <input type="text" class="trail-name" value="${trail.name}" placeholder="Trail Name">
+                        <select class="trail-type">
+                            ${TRAIL_TYPES.map(t => `<option value="${t.value}" ${t.value === trail.trailType ? 'selected' : ''}>${t.label}</option>`).join('')}
+                        </select>
+                        <div class="checkbox-group" style="margin-left: auto;">
+                            <input type="checkbox" class="trail-enabled" ${trail.enabled ? 'checked' : ''}>
+                            <label style="font-size: 0.75rem;">Enabled</label>
+                        </div>
+                        <button type="button" class="btn btn-danger trail-remove" style="padding: 4px 8px; font-size: 0.7rem;" title="Remove Trail">✕</button>
+                    </div>
+                    <div class="trail-fields" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+                        <div class="form-group">
+                            <label>Length (s)</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-length" min="0.05" max="2" step="0.01" value="${trail.length}">
+                                <span class="slider-value">${trail.length.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Width</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-width" min="0.001" max="0.1" step="0.001" value="${trail.width}">
+                                <span class="slider-value">${trail.width.toFixed(3)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Offset</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-offset" min="0" max="2" step="0.05" value="${trail.offset}">
+                                <span class="slider-value">${trail.offset.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Distortion</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-distortion" min="0" max="5" step="0.1" value="${trail.distortionMultiplier}">
+                                <span class="slider-value">${trail.distortionMultiplier.toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Blending</label>
+                            <select class="trail-blending">
+                                ${BLENDING_MODES.map(b => `<option value="${b.value}" ${b.value === trail.blendingMode ? 'selected' : ''}>${b.label}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Render Queue</label>
+                            <input type="number" class="trail-renderQueue" value="${trail.renderQueue}" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Min Vertex Dist</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-minDist" min="0.001" max="0.05" step="0.001" value="${trail.minVertexDistance}">
+                                <span class="slider-value">${trail.minVertexDistance.toFixed(3)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Speed Width</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-speedWidth" min="0" max="5" step="0.1" value="${trail.speedWidth}">
+                                <span class="slider-value">${trail.speedWidth.toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Speed Alpha</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-speedAlpha" min="0" max="2" step="0.05" value="${trail.speedAlpha}">
+                                <span class="slider-value">${trail.speedAlpha.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Blur Frames</label>
+                            <div class="slider-group">
+                                <input type="range" class="trail-blurFrames" min="0" max="10" step="0.5" value="${trail.blurFrames}">
+                                <span class="slider-value">${trail.blurFrames.toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Color Over Age</label>
+                            <div class="gradient-editor trail-colorOverAge" id="trailColorOverAge_${index}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Alpha Over Age</label>
+                            <div class="curve-editor trail-alphaOverAge" id="trailAlphaOverAge_${index}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Width Over Age</label>
+                            <div class="curve-editor trail-widthOverAge" id="trailWidthOverAge_${index}"></div>
+                        </div>
+                    </div>
+                    <div class="trail-drivers">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                            <h4 style="font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fg-muted);">Drivers</h4>
+                            <button type="button" class="btn btn-secondary trail-add-driver" style="font-size: 0.65rem; padding: 3px 8px;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Driver
+                            </button>
+                        </div>
+                        <div class="drivers-list trail-drivers-list" id="trailDrivers_${index}"></div>
+                    </div>
+                `;
+                container.appendChild(div);
+
+                // Initialize editors for this trail
+                initGradientEditor(`trailColorOverAge_${index}`, trail.colorOverAge, () => updateJSONOutput());
+                initCurveEditor(`trailAlphaOverAge_${index}`, trail.alphaOverAge, () => updateJSONOutput());
+                initCurveEditor(`trailWidthOverAge_${index}`, trail.widthOverAge, () => updateJSONOutput());
+                renderDriversList(`trailDrivers_${index}`, trail.drivers, `trail_${index}`);
+
+                // Event listeners
+                div.querySelector('.trail-name').addEventListener('input', () => { trail.name = div.querySelector('.trail-name').value; updateJSONOutput(); });
+                div.querySelector('.trail-type').addEventListener('change', () => { trail.trailType = parseInt(div.querySelector('.trail-type').value); updateJSONOutput(); updatePreview(); });
+                div.querySelector('.trail-enabled').addEventListener('change', () => { trail.enabled = div.querySelector('.trail-enabled').checked; updateJSONOutput(); updatePreview(); });
+
+                const syncSlider = (selector, prop, decimals = 2) => {
+                    const slider = div.querySelector(selector);
+                    const val = div.querySelector(selector).nextElementSibling;
+                    slider.addEventListener('input', () => {
+                        trail[prop] = parseFloat(slider.value);
+                        val.textContent = trail[prop].toFixed(decimals);
+                        updateJSONOutput();
+                    });
+                };
+
+                syncSlider('.trail-length', 'length');
+                syncSlider('.trail-width', 'width', 3);
+                syncSlider('.trail-offset', 'offset');
+                syncSlider('.trail-distortion', 'distortionMultiplier', 1);
+                syncSlider('.trail-renderQueue', 'renderQueue', 0);
+                syncSlider('.trail-minDist', 'minVertexDistance', 3);
+                syncSlider('.trail-speedWidth', 'speedWidth', 1);
+                syncSlider('.trail-speedAlpha', 'speedAlpha', 2);
+                syncSlider('.trail-blurFrames', 'blurFrames', 1);
+
+                div.querySelector('.trail-blending').addEventListener('change', () => { trail.blendingMode = parseInt(div.querySelector('.trail-blending').value); updateJSONOutput(); });
+                div.querySelector('.trail-renderQueue').addEventListener('change', () => { trail.renderQueue = parseInt(div.querySelector('.trail-renderQueue').value); updateJSONOutput(); });
+
+                div.querySelector('.trail-remove').addEventListener('click', () => {
+                    const preset = getCurrentPreset();
+                    if (preset.trails.length <= 1) { showToast('At least one trail is required', 'warning'); return; }
+                    preset.trails.splice(index, 1);
+                    renderTrailsList(preset.trails);
+                    updateJSONOutput();
+                    updatePreview();
+                });
+
+                div.querySelector('.trail-add-driver').addEventListener('click', () => addDriver(`trail_${index}`));
+            });
+        }
+
+        // ============================================================================
+        // Drivers List Rendering
+        // ============================================================================
+        function renderDriversList(containerId, drivers, prefix) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            drivers.forEach((driver, index) => {
+                const div = document.createElement('div');
+                div.className = 'driver-item';
+                div.dataset.index = index;
+                div.innerHTML = `
+                    <div class="driver-header">
+                        <select class="driver-type">
+                            ${DRIVER_TYPES.map(t => `<option value="${t.value}" ${t.value === driver.valueType ? 'selected' : ''}>${t.label}</option>`).join('')}
+                        </select>
+                        <input type="text" class="driver-name" value="${driver.name || ''}" placeholder="Driver Name (optional)">
+                        <button type="button" class="btn btn-danger driver-remove" style="padding: 4px 8px; font-size: 0.7rem;">✕</button>
+                    </div>
+                    <div class="driver-fields">
+                        <div class="form-group">
+                            <label>Increase Resistance</label>
+                            <div class="slider-group">
+                                <input type="range" class="driver-incRes" min="0" max="50" step="0.5" value="${driver.increaseResistance}">
+                                <span class="slider-value">${driver.increaseResistance.toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Decrease Resistance</label>
+                            <div class="slider-group">
+                                <input type="range" class="driver-decRes" min="0" max="50" step="0.5" value="${driver.decreaseResistance}">
+                                <span class="slider-value">${driver.decreaseResistance.toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Value From</label>
+                            <div class="slider-group">
+                                <input type="range" class="driver-valFrom" min="-10" max="10" step="0.1" value="${driver.valueFrom}">
+                                <span class="slider-value">${driver.valueFrom.toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Value To</label>
+                            <div class="slider-group">
+                                <input type="range" class="driver-valTo" min="-10" max="10" step="0.1" value="${driver.valueTo}">
+                                <span class="slider-value">${driver.valueTo.toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Value Curve</label>
+                            <div class="curve-editor driver-valueCurve" id="${prefix}_valueCurve_${index}"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Color Curve</label>
+                            <div class="gradient-editor driver-colorCurve" id="${prefix}_colorCurve_${index}"></div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+
+                initCurveEditor(`${prefix}_valueCurve_${index}`, driver.valueOverValue, () => updateJSONOutput());
+                initGradientEditor(`${prefix}_colorCurve_${index}`, driver.colorOverValue, () => updateJSONOutput());
+
+                div.querySelector('.driver-type').addEventListener('change', () => { driver.valueType = parseInt(div.querySelector('.driver-type').value); updateJSONOutput(); });
+                div.querySelector('.driver-name').addEventListener('input', () => { driver.name = div.querySelector('.driver-name').value; updateJSONOutput(); });
+
+                const syncSlider = (selector, prop, decimals = 1) => {
+                    const slider = div.querySelector(selector);
+                    const val = slider.nextElementSibling;
+                    slider.addEventListener('input', () => {
+                        driver[prop] = parseFloat(slider.value);
+                        val.textContent = driver[prop].toFixed(decimals);
+                        updateJSONOutput();
+                    });
+                };
+
+                syncSlider('.driver-incRes', 'increaseResistance');
+                syncSlider('.driver-decRes', 'decreaseResistance');
+                syncSlider('.driver-valFrom', 'valueFrom');
+                syncSlider('.driver-valTo', 'valueTo');
+
+                div.querySelector('.driver-remove').addEventListener('click', () => {
+                    const preset = getCurrentPreset();
+                    let list;
+                    if (prefix === 'global') list = preset.drivers;
+                    else if (prefix.startsWith('trail_')) {
+                        const trailIdx = parseInt(prefix.split('_')[1]);
+                        list = preset.trails[trailIdx].drivers;
+                    }
+                    if (list) { list.splice(index, 1); renderDriversList(containerId, list, prefix); updateJSONOutput(); }
+                });
+            });
+        }
+
+        function collectDriversFromList(containerId, prefix) {
+            const container = document.getElementById(containerId);
+            const drivers = [];
+            container.querySelectorAll('.driver-item').forEach((div, index) => {
+                const driver = {
+                    name: div.querySelector('.driver-name').value,
+                    valueType: parseInt(div.querySelector('.driver-type').value),
+                    increaseResistance: parseFloat(div.querySelector('.driver-incRes').value),
+                    decreaseResistance: parseFloat(div.querySelector('.driver-decRes').value),
+                    valueFrom: parseFloat(div.querySelector('.driver-valFrom').value),
+                    valueTo: parseFloat(div.querySelector('.driver-valTo').value),
+                    valueOverValue: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                    colorOverValue: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 }
+                };
+                // Get curves from editors
+                const valueEditor = curveEditors.get(`${prefix}_valueCurve_${index}`);
+                if (valueEditor) driver.valueOverValue = valueEditor.curve;
+                const colorEditor = gradientEditors.get(`${prefix}_colorCurve_${index}`);
+                if (colorEditor) driver.colorOverValue = colorEditor.gradient;
+                drivers.push(driver);
+            });
+            return drivers;
+        }
+
+        function addDriver(prefix) {
+            const preset = getCurrentPreset();
+            const newDriver = {
+                name: '',
+                valueType: 1,
+                increaseResistance: 0,
+                decreaseResistance: 0,
+                valueOverValue: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                colorOverValue: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                valueFrom: 0,
+                valueTo: 1
+            };
+            let list, containerId;
+            if (prefix === 'global') {
+                list = preset.drivers;
+                containerId = 'globalDriversList';
+            } else if (prefix.startsWith('trail_')) {
+                const trailIdx = parseInt(prefix.split('_')[1]);
+                list = preset.trails[trailIdx].drivers;
+                containerId = `trailDrivers_${trailIdx}`;
+            }
+            if (list) {
+                list.push(newDriver);
+                renderDriversList(containerId, list, prefix);
+                updateJSONOutput();
+            }
+        }
+
+        // ============================================================================
+        // Trail Management
+        // ============================================================================
+        function addTrail() {
+            const preset = getCurrentPreset();
+            const newTrail = {
+                enabled: true,
+                name: `Trail ${preset.trails.length + 1}`,
+                trailType: 1,
+                length: 0.22,
+                width: 0.02,
+                offset: 1.0,
+                distortionMultiplier: 1.0,
+                horizontalResolution: 4,
+                verticalResolution: 80,
+                blendingMode: 0,
+                alwaysOnTop: false,
+                renderQueue: 3000,
+                minVertexDistance: 0.004,
+                colorOverAge: { interpolationType: 1, points: [
+                    { time: 0, value: { r: 1, g: 1, b: 1, a: 1 } },
+                    { time: 1, value: { r: 1, g: 1, b: 1, a: 0 } }
+                ] },
+                alphaOverAge: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                widthOverAge: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
+                speedWidth: 0,
+                speedAlpha: 0.25,
+                blurFrames: 0,
+                useTexture: false,
+                texturePath: '',
+                tiling: { x: 1, y: 1 },
+                uvScroll: { x: 0, y: 0 },
+                transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                drivers: []
+            };
+            preset.trails.push(newTrail);
+            renderTrailsList(preset.trails);
+            updateJSONOutput();
+            updatePreview();
+        }
+
+        // ============================================================================
+        // JSON Output
+        // ============================================================================
+        function updateJSONOutput() {
+            syncUIToPreset(getCurrentPreset());
+
+            const config = {
+                formatVersion: 2,
+                name: state.presets.left.name,
+                author: state.presets.left.author,
+                description: state.presets.left.description,
+                sourceFormat: 'FreeSabers',
+                sourceVersion: '1.0',
+                createdDate: new Date().toISOString().split('T')[0],
+                modifiedDate: new Date().toISOString().split('T')[0],
+                useSameForBoth: state.syncSabers,
+                leftSaber: state.presets.left,
+                rightSaber: state.presets.right
+            };
+
+            document.getElementById('jsonOutput').innerHTML = formatJson(config);
+        }
+
+        // ============================================================================
+        // Preview Rendering (Simplified)
+        // ============================================================================
+        let previewAnimId = null;
+        let previewTime = 0;
+
+        function updatePreview() {
+            const preset = getCurrentPreset();
+            const canvas = document.getElementById('previewCtx');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size
+            const container = document.getElementById('previewCanvas');
+            const rect = container.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            ctx.scale(dpr, dpr);
+
+            // Update stats
+            let totalVerts = 0, totalTris = 0, totalTrails = 0;
+            if (preset.blade.enabled) {
+                totalVerts += preset.blade.verticalResolution * preset.blade.horizontalResolution * 4;
+                totalTris += preset.blade.verticalResolution * preset.blade.horizontalResolution * 2;
+            }
+            preset.trails.forEach(t => {
+                if (t.enabled) {
+                    totalTrails++;
+                    const samples = Math.min(Math.max(Math.round((t.length + t.blurFrames / 72) * 90) + 2, 4), 512);
+                    totalVerts += samples * 2;
+                    totalTris += (samples - 1) * 2;
+                }
+            });
+            if (preset.sparks.enabled) {
+                totalVerts += preset.sparks.count * 4;
+                totalTris += preset.sparks.count * 2;
+            }
+            if (preset.bolts.enabled) {
+                totalVerts += preset.bolts.joints * 4;
+                totalTris += preset.bolts.joints * 2;
+            }
+            const memKB = Math.round((totalVerts * 32 + totalTris * 4) / 1024);
+
+            document.getElementById('statVertices').textContent = totalVerts.toLocaleString();
+            document.getElementById('statTriangles').textContent = totalTris.toLocaleString();
+            document.getElementById('statTrails').textContent = totalTrails;
+            document.getElementById('statMemory').textContent = memKB + ' KB';
+
+            // Simple animated preview
+            if (previewAnimId) cancelAnimationFrame(previewAnimId);
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const saberLength = Math.min(rect.width, rect.height) * 0.7;
+            const bladeColor = preset.blade.enabled ? `rgba(${Math.round(preset.blade.emissionColor.r * 255)}, ${Math.round(preset.blade.emissionColor.g * 255)}, ${Math.round(preset.blade.emissionColor.b * 255)}, ${preset.blade.emissionColor.a})` : '#00ccff';
+            const glowColor = `rgba(${Math.round(preset.glow.color.r * 255)}, ${Math.round(preset.glow.color.g * 255)}, ${Math.round(preset.glow.color.b * 255)}, ${preset.glow.color.a})`;
+
+            function drawFrame(timestamp) {
+                previewTime = timestamp * 0.001;
+                ctx.clearRect(0, 0, rect.width, rect.height);
+
+                // Background grid
+                ctx.strokeStyle = '#1a1a24';
+                ctx.lineWidth = 1;
+                const gridSize = 40;
+                for (let x = 0; x <= rect.width; x += gridSize) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, rect.height); ctx.stroke();
+                }
+                for (let y = 0; y <= rect.height; y += gridSize) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(rect.width, y); ctx.stroke();
+                }
+
+                // Hilt
+                const hiltHeight = 60;
+                const hiltWidth = 24;
+                ctx.fillStyle = '#1a1a24';
+                ctx.fillRect(centerX - hiltWidth/2, centerY, hiltWidth, hiltHeight);
+                ctx.strokeStyle = '#3a3a4a';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(centerX - hiltWidth/2, centerY, hiltWidth, hiltHeight);
+
+                // Hilt rings
+                for (let i = 0; i < 3; i++) {
+                    const y = centerY + hiltHeight - 10 - i * 15;
+                    ctx.fillStyle = i % 2 === 0 ? bladeColor : '#3a3a4a';
+                    ctx.fillRect(centerX - 15, y, 30, 3);
+                }
+
+                // Blade
+                if (preset.blade.enabled) {
+                    const bladeTop = centerY - saberLength;
+                    const bladeWidth = 18;
+                    const pulse = 1 + Math.sin(previewTime * 3) * 0.015;
+
+                    // Glow
+                    if (preset.glow.enabled) {
+                        const glowRadius = bladeWidth * 4 * preset.glow.intensity;
+                        const glowGrad = ctx.createRadialGradient(centerX, bladeTop, 0, centerX, bladeTop, glowRadius);
+                        glowGrad.addColorStop(0, glowColor);
+                        glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.fillStyle = glowGrad;
+                        ctx.beginPath();
+                        ctx.ellipse(centerX, bladeTop, glowRadius, glowRadius * 0.5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    // Blade core
+                    const bladeGrad = ctx.createLinearGradient(centerX - bladeWidth/2, centerY, centerX + bladeWidth/2, bladeTop);
+                    bladeGrad.addColorStop(0, bladeColor);
+                    bladeGrad.addColorStop(0.5, '#ffffff');
+                    bladeGrad.addColorStop(1, bladeColor);
+
+                    ctx.fillStyle = bladeGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - bladeWidth/2 * pulse, centerY);
+                    ctx.lineTo(centerX + bladeWidth/2 * pulse, centerY);
+                    ctx.lineTo(centerX + bladeWidth/2 * pulse * 0.5, bladeTop);
+                    ctx.lineTo(centerX - bladeWidth/2 * pulse * 0.5, bladeTop);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Inner core
+                    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                    ctx.beginPath();
+                    ctx.moveTo(centerX - 2 * pulse, centerY);
+                    ctx.lineTo(centerX + 2 * pulse, centerY);
+                    ctx.lineTo(centerX + 1 * pulse, bladeTop);
+                    ctx.lineTo(centerX - 1 * pulse, bladeTop);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Trails preview (simplified)
+                    preset.trails.forEach((trail, ti) => {
+                        if (!trail.enabled) return;
+                        const trailColor = `rgba(${Math.round(preset.blade.emissionColor.r * 255)}, ${Math.round(preset.blade.emissionColor.g * 255)}, ${Math.round(preset.blade.emissionColor.b * 255)}, 0.3)`;
+                        ctx.strokeStyle = trailColor;
+                        ctx.lineWidth = trail.width * 500;
+                        ctx.lineCap = 'round';
+
+                        // Draw a few trail segments
+                        for (let s = 0; s < 5; s++) {
+                            const t = (previewTime * 2 + s * 0.3) % 1;
+                            const y1 = centerY - saberLength * t;
+                            const y2 = centerY - saberLength * ((t + 0.15) % 1);
+                            const xOffset = Math.sin(previewTime * 5 + s) * 20;
+                            ctx.beginPath();
+                            ctx.moveTo(centerX + xOffset, y1);
+                            ctx.lineTo(centerX + xOffset, y2);
+                            ctx.stroke();
+                        }
+                    });
+                }
+
+                // Sparks preview (occasional)
+                if (preset.sparks.enabled && Math.random() < 0.02) {
+                    const sparkCount = Math.min(5, preset.sparks.count / 20);
+                    for (let i = 0; i < sparkCount; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * 50 + 20;
+                        const x = centerX + Math.cos(angle) * dist;
+                        const y = centerY - Math.random() * saberLength;
+                        ctx.fillStyle = `rgba(255,255,255,${Math.random()})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, preset.sparks.size * 500, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                previewAnimId = requestAnimationFrame(drawFrame);
+            }
+
+            previewAnimId = requestAnimationFrame(drawFrame);
+        }
+
+        // ============================================================================
+        // File Operations
+        // ============================================================================
+        function downloadJSON() {
+            syncUIToPreset(getCurrentPreset());
+            const config = {
+                formatVersion: 2,
+                name: state.presets.left.name,
+                author: state.presets.left.author,
+                description: state.presets.left.description,
+                sourceFormat: 'FreeSabers',
+                sourceVersion: '1.0',
+                createdDate: new Date().toISOString().split('T')[0],
+                modifiedDate: new Date().toISOString().split('T')[0],
+                useSameForBoth: state.syncSabers,
+                leftSaber: state.presets.left,
+                rightSaber: state.presets.right
+            };
+
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${state.presets.left.name.replace(/[^a-z0-9]/gi, '_')}.freesaber.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Preset downloaded!');
+        }
+
+        function copyJSON() {
+            syncUIToPreset(getCurrentPreset());
+            const config = {
+                formatVersion: 2,
+                name: state.presets.left.name,
+                author: state.presets.left.author,
+                description: state.presets.left.description,
+                sourceFormat: 'FreeSabers',
+                sourceVersion: '1.0',
+                createdDate: new Date().toISOString().split('T')[0],
+                modifiedDate: new Date().toISOString().split('T')[0],
+                useSameForBoth: state.syncSabers,
+                leftSaber: state.presets.left,
+                rightSaber: state.presets.right
+            };
+            navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+            showToast('JSON copied to clipboard!');
+        }
+
+        function loadPreset(type) {
+            let preset;
+            const isLeft = state.activeSaber === 'left';
+
+            switch (type) {
+                case 'blue':
+                    preset = getDefaultPreset(state.activeSaber);
+                    preset.name = isLeft ? 'Blue Saber' : 'Blue Saber';
+                    preset.blade.baseColor = { r: 0, g: 0.8, b: 1, a: 1 };
+                    preset.blade.emissionColor = { r: 0, g: 0.8, b: 1, a: 1 };
+                    preset.glow.color = { r: 0, g: 0.8, b: 1, a: 1 };
+                    break;
+                case 'red':
+                    preset = getDefaultPreset(state.activeSaber);
+                    preset.name = isLeft ? 'Red Saber' : 'Red Saber';
+                    preset.blade.baseColor = { r: 1, g: 0.2, b: 0.2, a: 1 };
+                    preset.blade.emissionColor = { r: 1, g: 0.2, b: 0.2, a: 1 };
+                    preset.glow.color = { r: 1, g: 0.2, b: 0.2, a: 1 };
+                    break;
+                case 'rainbow':
+                    preset = getDefaultPreset(state.activeSaber);
+                    preset.name = isLeft ? 'Rainbow Saber' : 'Rainbow Saber';
+                    preset.blade.colorOverride.force = true;
+                    preset.blade.colorOverride.type = 0;
+                    preset.blade.colorOverride.hueShiftPerSecond = 0.3;
+                    preset.blade.colorOverride.saturation = 1;
+                    preset.blade.colorOverride.value = 1;
+                    preset.glow.pulseEnabled = true;
+                    preset.glow.pulseSpeed = 2;
+                    break;
+                case 'minimal':
+                    preset = getDefaultPreset(state.activeSaber);
+                    preset.name = isLeft ? 'Minimal Saber' : 'Minimal Saber';
+                    preset.trails = [preset.trails[0]]; // Only blade trail
+                    preset.sparks.enabled = false;
+                    preset.glow.enabled = false;
+                    preset.bolts.enabled = false;
+                    preset.drivers = [];
+                    break;
+            }
+
+            setCurrentPreset(preset);
+            showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} template loaded!`);
+        }
+
+        function handleFileLoad(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+
+                    // Check if it's a ReeSabers format
+                    if (json.modules || json.sabers) {
+                        showToast('ReeSabers format detected - import not fully implemented yet', 'warning');
+                        return;
+                    }
+
+                    // Handle FreeSabers format
+                    if (json.leftSaber && json.rightSaber) {
+                        state.presets.left = json.leftSaber;
+                        state.presets.right = json.rightSaber;
+                        state.syncSabers = json.useSameForBoth !== false;
+                        document.getElementById('syncSabers').checked = state.syncSabers;
+                    } else if (json.blade || json.trails) {
+                        // Single saber preset
+                        state.presets[state.activeSaber] = json;
+                        if (state.syncSabers) {
+                            const other = state.activeSaber === 'left' ? 'right' : 'left';
+                            state.presets[other] = JSON.parse(JSON.stringify(json));
+                            state.presets[other].id = crypto.randomUUID();
+                            state.presets[other].name = other === 'left' ? 'Left Saber' : 'Right Saber';
+                        }
+                    } else {
+                        throw new Error('Unknown preset format');
+                    }
+
+                    updateAllUI();
+                    showToast('Preset loaded successfully!');
+                } catch (err) {
+                    showToast('Failed to load preset: ' + err.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ============================================================================
+        // Event Listeners
+        // ============================================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize editors
+            const leftPreset = getDefaultPreset('left');
+            const rightPreset = getDefaultPreset('right');
+            state.presets.left = leftPreset;
+            state.presets.right = rightPreset;
+
+            initCurveEditor('bladeProfileCurve', leftPreset.blade.profile, () => updateJSONOutput());
+            initGradientEditor('sparksColorGradient', leftPreset.sparks.colorOverLifetime, () => updateJSONOutput());
+
+            // Sync sabers toggle
+            document.getElementById('syncSabers').addEventListener('change', (e) => {
+                state.syncSabers = e.target.checked;
+                if (state.syncSabers) {
+                    const other = state.activeSaber === 'left' ? 'right' : 'left';
+                    state.presets[other] = JSON.parse(JSON.stringify(state.presets[state.activeSaber]));
+                    state.presets[other].id = crypto.randomUUID();
+                    state.presets[other].name = other === 'left' ? 'Left Saber' : 'Right Saber';
+                }
+                updateAllUI();
+            });
+
+            // Color input sync
+            document.querySelectorAll('input[type="color"]').forEach(input => {
+                const hexInput = input.nextElementSibling;
+                if (hexInput && hexInput.type === 'text') {
+                    input.addEventListener('input', () => { hexInput.value = input.value; updateJSONOutput(); });
+                    hexInput.addEventListener('input', () => {
+                        if (/^#[0-9a-fA-F]{6}$/.test(hexInput.value)) {
+                            input.value = hexInput.value;
+                            updateJSONOutput();
+                        }
+                    });
+                }
+            });
+
+            // Slider value displays
+            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                const valDisplay = slider.nextElementSibling;
+                if (valDisplay && valDisplay.classList.contains('slider-value')) {
+                    slider.addEventListener('input', () => {
+                        valDisplay.textContent = parseFloat(slider.value).toFixed(slider.step.includes('.') ? slider.step.length - 2 : 1);
+                    });
+                }
+            });
+
+            // Toggle sections
+            document.getElementById('bladeColorOverrideEnabled').addEventListener('change', (e) => {
+                document.getElementById('bladeColorOverrideOptions').classList.toggle('hidden', !e.target.checked);
+            });
+            document.getElementById('glowPulseEnabled').addEventListener('change', (e) => {
+                document.getElementById('glowPulseOptions').classList.toggle('hidden', !e.target.checked);
+            });
+            document.getElementById('boltsEnabled').addEventListener('change', (e) => {
+                document.getElementById('boltsOptions').classList.toggle('hidden', !e.target.checked);
+            });
+
+            // Buttons
+            document.getElementById('btnNew').addEventListener('click', () => {
+                state.presets.left = getDefaultPreset('left');
+                state.presets.right = getDefaultPreset('right');
+                state.syncSabers = true;
+                document.getElementById('syncSabers').checked = true;
+                updateAllUI();
+                showToast('New preset created');
+            });
+
+            document.getElementById('btnLoad').addEventListener('click', () => {
+                document.getElementById('fileInput').click();
+            });
+
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                if (e.target.files[0]) handleFileLoad(e.target.files[0]);
+                e.target.value = '';
+            });
+
+            document.getElementById('btnSave').addEventListener('click', downloadJSON);
+            document.getElementById('btnDownloadJson').addEventListener('click', downloadJSON);
+            document.getElementById('btnCopyJson').addEventListener('click', copyJSON);
+
+            // Drop zone
+            const dropZone = document.getElementById('dropZone');
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files[0]) handleFileLoad(e.dataTransfer.files[0]);
+            });
+            dropZone.addEventListener('click', () => document.getElementById('fileInput').click());
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 's') { e.preventDefault(); downloadJSON; }
+                    else if (e.key === 'o') { e.preventDefault(); document.getElementById('fileInput').click(); }
+                    else if (e.key === 'n') { e.preventDefault(); document.getElementById('btnNew').click(); }
+                }
+            });
+
+            // Initial render
+            renderTrailsList(leftPreset.trails);
+            renderDriversList('globalDriversList', leftPreset.drivers, 'global');
+            updateAllUI();
+        });
+
+        // Cleanup on unload
+        window.addEventListener('beforeunload', () => {
+            if (previewAnimId) cancelAnimationFrame(previewAnimId);
+        });
+    </script>
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>
