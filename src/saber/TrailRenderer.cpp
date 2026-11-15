@@ -22,7 +22,9 @@ bool TrailRenderer::Initialize(const TrailConfig& trailConfig, UnityEngine::Mate
 
     // Use global config for max samples (performance optimization)
     const int globalMaxSamples = Config::GetInstance().GetMaxTrailSamples();
-    maxSamples = std::clamp(static_cast<int>(config.length * 90.0f) + 2, 4, globalMaxSamples);
+    // Use effective length (including blurFrames) for sample count calculation
+    const float effectiveLength = config.length + std::max(0.0f, config.blurFrames / 72.0f);
+    maxSamples = std::clamp(static_cast<int>(effectiveLength * 90.0f) + 2, 4, globalMaxSamples);
 
     vertices = ArrayW<UnityEngine::Vector3>(maxSamples * 2);
     colors = ArrayW<UnityEngine::Color>(maxSamples * 2);
@@ -182,7 +184,8 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
     const bool shouldSample = samples.empty() ||
         Visuals::Distance(samples.back().bottom, bottom) > config.minVertexDistance ||
         Visuals::Distance(samples.back().tip, tip) > config.minVertexDistance ||
-        (elapsed - lastSampleTime) > (1.0f / 90.0f);
+        (elapsed - lastSampleTime) > (1.0f / 90.0f) ||
+        speed > 5.0f;  // Always sample at high speeds to avoid gaps
 
     if (shouldSample) {
         Sample sample;
@@ -197,7 +200,9 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
         }
     }
 
-    while (!samples.empty() && (elapsed - samples.front().time) > config.length) {
+    // Use effective length for age calculation and sample expiration
+    const float effectiveLength = config.length + std::max(0.0f, config.blurFrames / 72.0f);
+    while (!samples.empty() && (elapsed - samples.front().time) > effectiveLength) {
         samples.erase(samples.begin());
     }
 
@@ -206,14 +211,12 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
         return;
     }
 
-    // Get camera orientation - cache reference to avoid repeated get_main() calls
-    static UnityEngine::Camera* cachedCamera = nullptr;
-    if (!Visuals::IsAlive(cachedCamera)) {
-        cachedCamera = UnityEngine::Camera::get_main();
-    }
+    // Get camera orientation - fetch each frame to handle camera changes (e.g., menu <-> gameplay)
+    // Using get_main() is fast enough; caching caused issues when main camera changes
+    UnityEngine::Camera* camera = UnityEngine::Camera::get_main();
     UnityEngine::Vector3 cameraRight{1.0f, 0.0f, 0.0f};
-    if (Visuals::IsAlive(cachedCamera)) {
-        if (UnityEngine::Transform* transform = cachedCamera->get_transform()) {
+    if (Visuals::IsAlive(camera)) {
+        if (UnityEngine::Transform* transform = camera->get_transform()) {
             cameraRight = transform->get_right();
         }
     }
@@ -222,7 +225,9 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
     const int used = static_cast<int>(samples.size());
 
     // UV scroll offset based on time for animated textures
-    const float uvTimeOffset = std::fmod(elapsed * config.uvScroll.y, 1.0f);
+    // Use both X (tiling across width) and Y (scrolling along length)
+    const float uvTimeOffsetU = std::fmod(elapsed * config.uvScroll.x, 1.0f);
+    const float uvTimeOffsetV = std::fmod(elapsed * config.uvScroll.y, 1.0f);
 
     // Build transform matrix from config.transform
     const UnityEngine::Vector3 transformPos = Visuals::ToUnity(config.transform.position);
@@ -231,7 +236,7 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
 
     for (int i = 0; i < used; ++i) {
         const Sample& sample = samples[i];
-        const float age = std::clamp((elapsed - sample.time) / std::max(config.length, 0.001f), 0.0f, 1.0f);
+        const float age = std::clamp((elapsed - sample.time) / std::max(effectiveLength, 0.001f), 0.0f, 1.0f);
         const float widthScale = std::max(config.widthOverAge.Empty() ? 1.0f : config.widthOverAge.Evaluate(age), 0.01f) * speedBoost;
 
         UnityEngine::Vector3 left;
@@ -239,22 +244,28 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
 
         if (config.IsTipTrail()) {
             const float offset = std::clamp(config.offset, 0.0f, 2.0f);
-            const UnityEngine::Vector3 point = Visuals::Add(
-                Visuals::Lerp(sample.bottom, sample.tip, offset), transformPos);
+            const UnityEngine::Vector3 point = Visuals::Lerp(sample.bottom, sample.tip, offset);
             const float halfWidth = config.width * 0.5f * widthScale;
             left = Visuals::Add(point, Visuals::Scale(cameraRight, -halfWidth));
             right = Visuals::Add(point, Visuals::Scale(cameraRight, halfWidth));
         } else {
             const UnityEngine::Vector3 center = Visuals::Scale(Visuals::Add(sample.bottom, sample.tip), 0.5f);
             const UnityEngine::Vector3 half = Visuals::Scale(Visuals::Sub(sample.tip, sample.bottom), 0.5f * widthScale);
-            left = Visuals::Add(Visuals::Sub(center, half), transformPos);
-            right = Visuals::Add(Visuals::Add(center, half), transformPos);
+            left = Visuals::Sub(center, half);
+            right = Visuals::Add(center, half);
         }
 
-        // Apply transform rotation and scale
+        // Apply transform (position, rotation, scale) from config.transform
         if (!config.transform.IsIdentity()) {
             left = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(left, transformPos)), transformScale.x));
             right = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(right, transformPos)), transformScale.x));
+        } else {
+            // Even without custom transform, tip trails need the blade position offset applied
+            // (for tip trail, sample positions are already in world space; for blade trail, they're relative)
+            if (config.IsTipTrail()) {
+                left = Visuals::Add(left, transformPos);
+                right = Visuals::Add(right, transformPos);
+            }
         }
 
         Color baseColor = config.colorOverAge.Empty()
@@ -272,10 +283,11 @@ void TrailRenderer::Update(float deltaTime, const UnityEngine::Vector3& bottom, 
         colors[index] = UnityEngine::Color{baseColor.r, baseColor.g, baseColor.b, alpha};
         colors[index + 1] = UnityEngine::Color{baseColor.r, baseColor.g, baseColor.b, alpha};
 
-        // UV coordinates: X = across trail width (0 to 1), Y = along trail length (0 to 1, with scroll)
-        const float v = (1.0f - age) + uvTimeOffset;
-        uvs[index] = UnityEngine::Vector2{0.0f, v};
-        uvs[index + 1] = UnityEngine::Vector2{1.0f, v};
+        // UV coordinates: X = across trail width (0 to 1, with U scroll), Y = along trail length (0 to 1, with V scroll)
+        const float u = uvTimeOffsetU;  // Horizontal scroll across trail width
+        const float v = (1.0f - age) + uvTimeOffsetV;
+        uvs[index] = UnityEngine::Vector2{u, v};
+        uvs[index + 1] = UnityEngine::Vector2{1.0f + u, v};
     }
 
     // Degenerate unused slots so the fixed triangle buffer stays invisible.

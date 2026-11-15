@@ -69,7 +69,8 @@ bool SparkSystem::Initialize(const SparkConfig& sparkConfig, UnityEngine::Materi
     Visuals::SetIntIfPresent(material, "_Cull", 0);
     Visuals::SetIntIfPresent(material, "_ZWrite", 0);
     Visuals::SetIntIfPresent(material, "_SrcBlend", 5);   // SrcAlpha
-    Visuals::SetIntIfPresent(material, "_DstBlend", 10);  // OneMinusSrcAlpha (standard alpha blend)
+    Visuals::SetIntIfPresent(material, "_DstBlend", 1);   // One (additive for sparks)
+    Visuals::SetIntIfPresent(material, "_BlendOp", 0);    // Add
     Visuals::SetIntIfPresent(material, "_ZTest", 4);
     material->set_renderQueue(3010);
 
@@ -167,8 +168,8 @@ void SparkSystem::Emit(const UnityEngine::Vector3& position, const UnityEngine::
     }
 }
 
-void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const Color& tint, float speed,
-                         float driverValue, const Color& driverColor) {
+void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const UnityEngine::Vector3& bladeDirection,
+                         const Color& tint, float speed, float driverValue, const Color& driverColor) {
     if (!initialized || !config.enabled) return;
 
     elapsed += deltaTime;
@@ -186,7 +187,8 @@ void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const
         const float period = std::max(config.triggerPeriod, 0.02f);
         while (emitTimer >= period) {
             emitTimer -= period;
-            Emit(tip, UnityEngine::Vector3{0.0f, 0.0f, 1.0f}, std::min(1.0f, speed * 0.25f) * driverValue);
+            // Use blade direction for continuous emission
+            Emit(tip, bladeDirection, std::min(1.0f, speed * 0.25f) * driverValue);
         }
     }
 
@@ -221,15 +223,12 @@ void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const
         return;
     }
 
-    // Get camera orientation - cache reference to avoid repeated get_main() calls
-    static UnityEngine::Camera* cachedCamera = nullptr;
-    if (!Visuals::IsAlive(cachedCamera)) {
-        cachedCamera = UnityEngine::Camera::get_main();
-    }
+    // Get camera orientation - fetch each frame to handle camera changes
+    UnityEngine::Camera* camera = UnityEngine::Camera::get_main();
     UnityEngine::Vector3 cameraRight{1.0f, 0.0f, 0.0f};
     UnityEngine::Vector3 cameraUp{0.0f, 1.0f, 0.0f};
-    if (Visuals::IsAlive(cachedCamera)) {
-        if (UnityEngine::Transform* transform = cachedCamera->get_transform()) {
+    if (Visuals::IsAlive(camera)) {
+        if (UnityEngine::Transform* transform = camera->get_transform()) {
             cameraRight = transform->get_right();
             cameraUp = transform->get_up();
         }
@@ -242,12 +241,6 @@ void SparkSystem::Update(float deltaTime, const UnityEngine::Vector3& tip, const
 
 void SparkSystem::WriteBuffers(const UnityEngine::Vector3& cameraRight, const UnityEngine::Vector3& cameraUp,
                                float driverValue, const Color& driverColor) {
-    // Precompute transform for vertex positions
-    const UnityEngine::Vector3 transformPos = Visuals::ToUnity(config.transform.position);
-    const UnityEngine::Quaternion transformRot = UnityEngine::Quaternion::Euler(Visuals::ToUnity(config.transform.rotation));
-    const UnityEngine::Vector3 transformScale = Visuals::ToUnity(config.transform.scale);
-    const bool hasTransform = !config.transform.IsIdentity();
-
     for (int i = 0; i < capacity; ++i) {
         const Particle& particle = particles[i];
         const int base = i * 4;
@@ -285,18 +278,11 @@ void SparkSystem::WriteBuffers(const UnityEngine::Vector3& cameraRight, const Un
         const UnityEngine::Vector3 right = Visuals::Scale(cameraRight, halfSize);
         const UnityEngine::Vector3 up = Visuals::Scale(cameraUp, halfSize);
 
+        // Particle positions are already in world space (transform applied at emission)
         UnityEngine::Vector3 v0 = Visuals::Sub(Visuals::Sub(particle.position, right), up);
         UnityEngine::Vector3 v1 = Visuals::Sub(Visuals::Add(particle.position, right), up);
         UnityEngine::Vector3 v2 = Visuals::Add(Visuals::Add(particle.position, right), up);
         UnityEngine::Vector3 v3 = Visuals::Add(Visuals::Sub(particle.position, right), up);
-
-        // Apply transform rotation and scale to vertices
-        if (hasTransform) {
-            v0 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v0, transformPos)), transformScale.x));
-            v1 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v1, transformPos)), transformScale.x));
-            v2 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v2, transformPos)), transformScale.x));
-            v3 = Visuals::Add(transformPos, Visuals::Scale(UnityEngine::Quaternion::op_Multiply(transformRot, Visuals::Sub(v3, transformPos)), transformScale.x));
-        }
 
         vertices[base] = v0;
         vertices[base + 1] = v1;

@@ -153,6 +153,7 @@ void Config::CreateDefaultPreset() {
     bladeTrail.name = "Blade Trail";
     bladeTrail.trailType = 1;
     bladeTrail.length = 0.22f;
+    bladeTrail.blurFrames = 2.0f;
     bladeTrail.width = 0.03f;
     bladeTrail.speedWidth = 0.05f;
     bladeTrail.speedAlpha = 0.35f;
@@ -166,12 +167,14 @@ void Config::CreateDefaultPreset() {
     bladeTrail.alphaOverAge.points = {{0.0f, 1.0f}, {0.5f, 0.6f}, {1.0f, 0.0f}};
     bladeTrail.widthOverAge.points = {{0.0f, 1.0f}, {0.3f, 0.8f}, {1.0f, 0.15f}};
     bladeTrail.renderQueue = 3000;
+    bladeTrail.distortionMultiplier = 0.5f;
     preset.trails.push_back(bladeTrail);
 
     TrailConfig tipTrail;
     tipTrail.name = "Tip Trail";
     tipTrail.trailType = 0;
     tipTrail.length = 0.16f;
+    tipTrail.blurFrames = 1.5f;
     tipTrail.width = 0.035f;
     tipTrail.speedWidth = 0.04f;
     tipTrail.blendingMode = 0;
@@ -184,6 +187,7 @@ void Config::CreateDefaultPreset() {
     tipTrail.alphaOverAge.points = {{0.0f, 1.0f}, {0.5f, 0.5f}, {1.0f, 0.0f}};
     tipTrail.widthOverAge.points = {{0.0f, 1.0f}, {1.0f, 0.2f}};
     tipTrail.renderQueue = 3001;
+    tipTrail.distortionMultiplier = 0.3f;
     preset.trails.push_back(tipTrail);
 
     preset.sparks.enabled = true;

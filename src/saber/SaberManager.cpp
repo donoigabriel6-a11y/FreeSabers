@@ -112,11 +112,14 @@ void SaberManager::AddImplicitBlurTrail(Instance& instance) {
     blur.name = "Motion Blur";
     blur.enabled = true;
     blur.trailType = 1;
-    blur.length = std::clamp(blade.blurFrames / 72.0f, 0.03f, 0.30f);
+    blur.length = 0.0f;  // Use blurFrames on the trail instead
+    blur.blurFrames = blade.blurFrames;
     blur.width = blade.radius * 2.0f;
     blur.speedWidth = std::max(blade.blurSensitivity, 0.0f) * 0.22f;
     blur.speedAlpha = 0.5f;
     blur.minVertexDistance = 0.003f;
+    blur.distortionMultiplier = 1.0f;
+    blur.blendingMode = 0;  // Additive
 
     const Color tipColor = blade.colorOverValue.Empty() ? blade.baseColor : blade.SampleColor(1.0f);
     blur.colorOverAge.points = {
@@ -128,8 +131,7 @@ void SaberManager::AddImplicitBlurTrail(Instance& instance) {
     blur.widthOverAge.points = {{0.0f, 1.0f}, {1.0f, 0.12f}};
 
     instance.preset.trails.push_back(blur);
-    PaperLogger.info("FreeSabers: generated motion-blur trail (%.2fs) from blurFrames %.2f",
-                     blur.length, blade.blurFrames);
+    PaperLogger.info("FreeSabers: generated motion-blur trail (blurFrames %.2f)", blade.blurFrames);
 }
 
 void SaberManager::BuildVisuals(Instance& instance) {
@@ -169,6 +171,9 @@ void SaberManager::BuildVisuals(Instance& instance) {
         }
     }
     instance.hasTrails = !instance.trails.empty();
+
+    // Resize driver state arrays to match number of trails
+    instance.driverState.trailDriverValues.resize(instance.trails.size(), 1.0f);
 
     if (instance.preset.glow.enabled) {
         instance.glow = std::make_unique<GlowEffect>();
@@ -277,9 +282,12 @@ void SaberManager::ApplyVisibility() {
 float SaberManager::EvaluateDriver(int valueType, const Instance& instance, const UnityEngine::Vector3& direction) const {
     switch (static_cast<DriverType>(valueType)) {
         case DriverType::TipVelocity:
-        case DriverType::TipAcceleration:
-        case DriverType::AngularVelocity:
             return instance.speed;
+        case DriverType::TipAcceleration:
+            // Approximate acceleration from speed change
+            return instance.speed;  // Would need previous frame speed for true acceleration
+        case DriverType::AngularVelocity:
+            return instance.speed;  // Approximate from tip velocity
         case DriverType::SwingsPerSecond:
             // Approximate swings per second from speed; average swing produces ~15-20 m/s tip velocity
             return std::max(0.0f, instance.speed / 18.0f);
@@ -413,7 +421,7 @@ void SaberManager::Update(float deltaTime) {
                 ? sparkDriverTarget
                 : instance.preset.sparks.drivers.front().ApplyResistance(
                       instance.driverState.sparkDriverValue, sparkDriverTarget, dt);
-            instance.sparks->Update(dt, tip, tint, instance.speed, instance.driverState.sparkDriverValue, sparkDriverColor);
+            instance.sparks->Update(dt, tip, direction, tint, instance.speed, instance.driverState.sparkDriverValue, sparkDriverColor);
         }
 
         if (instance.bolts) {

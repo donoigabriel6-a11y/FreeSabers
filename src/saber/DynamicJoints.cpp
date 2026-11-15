@@ -59,6 +59,7 @@ bool DynamicJoints::Initialize(const BoltsConfig& boltsConfig, const TransformOf
     Visuals::SetIntIfPresent(material, "_DstBlend", 10);
     material->set_renderQueue(3002);
 
+    // Root object at world origin, joints will be positioned in world space
     root = Visuals::CreateMeshObject("FreeSabersBolts", nullptr, nullptr, nullptr);
     if (!root) {
         Visuals::SafeDestroy(material);
@@ -102,10 +103,13 @@ void DynamicJoints::Update(float deltaTime, const UnityEngine::Vector3& tip, con
 
     for (size_t i = 0; i < joints.size(); ++i) {
         Joint& joint = joints[i];
+
+        // Target position: first joint follows tip, others follow previous joint
         const UnityEngine::Vector3 target = i == 0
             ? tip
             : Visuals::Add(joints[i - 1].position, Visuals::Scale(down, config.spacing));
 
+        // Spring force toward target
         const UnityEngine::Vector3 spring = Visuals::Scale(
             Visuals::Sub(target, joint.position), stiffness);
         joint.velocity = Visuals::Add(joint.velocity, Visuals::Scale(spring, dt));
@@ -113,6 +117,7 @@ void DynamicJoints::Update(float deltaTime, const UnityEngine::Vector3& tip, con
         joint.velocity = Visuals::Scale(joint.velocity, damping);
         joint.position = Visuals::Add(joint.position, Visuals::Scale(joint.velocity, dt));
 
+        // Distance constraint - keep joints at fixed spacing
         if (i > 0) {
             const UnityEngine::Vector3 previous = joints[i - 1].position;
             const UnityEngine::Vector3 delta = Visuals::Sub(joint.position, previous);
@@ -122,13 +127,20 @@ void DynamicJoints::Update(float deltaTime, const UnityEngine::Vector3& tip, con
             }
         }
 
-        UnityEngine::Vector3 forward = i == 0
-            ? Visuals::Normalize(Visuals::Scale(bladeDirection, -1.0f))
-            : Visuals::Normalize(Visuals::Sub(joints[i - 1].position, joint.position));
+        // Orient joint to follow the chain direction
+        UnityEngine::Vector3 forward;
+        if (i == 0) {
+            // First joint: orient along blade direction (pointing "down" from tip)
+            forward = Visuals::Normalize(Visuals::Scale(bladeDirection, -1.0f));
+        } else {
+            // Other joints: orient toward previous joint
+            forward = Visuals::Normalize(Visuals::Sub(joints[i - 1].position, joint.position));
+        }
         if (Visuals::Magnitude(forward) < 0.001f) forward = UnityEngine::Vector3{0.0f, 0.0f, 1.0f};
 
-        joint.transform->set_localPosition(joint.position);
-        joint.transform->set_localRotation(UnityEngine::Quaternion::LookRotation(forward, UnityEngine::Vector3{0.0f, 0.0f, 1.0f}));
+        // Use world space position since root is not parented to saber
+        joint.transform->set_position(joint.position);
+        joint.transform->set_rotation(UnityEngine::Quaternion::LookRotation(forward, UnityEngine::Vector3{0.0f, 0.0f, 1.0f}));
     }
 }
 
