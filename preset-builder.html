@@ -2892,12 +2892,11 @@
             }
 
             previewAnimId = requestAnimationFrame(drawFrame);
-        }
 
-        // Hide loading overlay once preview starts
-        const loadingEl = document.getElementById('previewLoading');
-        if (loadingEl) loadingEl.style.display = 'none';
-    }
+            // Hide loading overlay once preview starts
+            const loadingEl = document.getElementById('previewLoading');
+            if (loadingEl) loadingEl.style.display = 'none';
+        }
 
     // ============================================================================
     // File Operations
@@ -3140,6 +3139,14 @@
             renderTrailsList(leftPreset.trails);
             renderDriversList('globalDriversList', leftPreset.drivers, 'global');
             updateAllUI();
+
+            // Expose functions to global scope for onclick handlers
+            window.selectSaber = selectSaber;
+            window.addCurvePoint = addCurvePoint;
+            window.addGradientStop = addGradientStop;
+            window.addTrail = addTrail;
+            window.addDriver = addDriver;
+            window.loadPreset = loadPreset;
         });
 
         // Cleanup on unload
