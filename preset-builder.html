@@ -1503,7 +1503,7 @@
                 author: 'FreeSabers User',
                 description: '',
                 version: 2,
-                transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
                 keepVanillaModel: false,
                 blade: {
                     enabled: true,
@@ -1516,11 +1516,11 @@
                     endCap: true,
                     verticalResolution: 20,
                     horizontalResolution: 10,
-                    baseColor: { r: 0, g: 0.8, b: 1, a: 1 },
-                    emissionColor: { r: 0, g: 0.8, b: 1, a: 1 },
+                    baseColor: [0, 0.8, 1, 1],
+                    emissionColor: [0, 0.8, 1, 1],
                     emissionIntensity: 2.0,
-                    reflectionColor: { r: 0.05, g: 0.005, b: 0.005, a: 0 },
-                    envLightColor: { r: 1, g: 1, b: 1, a: 1 },
+                    reflectionColor: [0.05, 0.005, 0.005, 0],
+                    envLightColor: [1, 1, 1, 1],
                     fresnelPower: 5.0,
                     metallic: 0.0,
                     roughness: 0.43,
@@ -1530,7 +1530,7 @@
                     sceneReflections: false,
                     sceneLights: false,
                     glowMultiplier: 1.0,
-                    handleColor: { r: 0.1, g: 0.1, b: 0.1, a: 0 },
+                    handleColor: [0.1, 0.1, 0.1, 0],
                     handleRoughness: 2.0,
                     renderQueue: 3002,
                     cullMode: 0,
@@ -1545,8 +1545,8 @@
                     handleMask: { interpolationType: 1, points: [] },
                     bladeMaskResolution: 48,
                     drivers: [],
-                    tiling: { x: 1, y: 1 },
-                    uvScroll: { x: 0, y: 0 },
+                    tiling: [1, 1],
+                    uvScroll: [0, 0],
                     useTexture: false,
                     texturePath: '',
                     colorOverride: {
@@ -1576,8 +1576,8 @@
                         renderQueue: 3000,
                         minVertexDistance: 0.004,
                         colorOverAge: { interpolationType: 1, points: [
-                            { time: 0, value: { r: 1, g: 1, b: 1, a: 1 } },
-                            { time: 1, value: { r: 1, g: 1, b: 1, a: 0 } }
+                            { time: 0, value: [1, 1, 1, 1] },
+                            { time: 1, value: [1, 1, 1, 0] }
                         ] },
                         alphaOverAge: { interpolationType: 1, points: [] },
                         widthOverAge: { interpolationType: 1, points: [] },
@@ -1586,9 +1586,9 @@
                         blurFrames: 2.0,
                         useTexture: false,
                         texturePath: '',
-                        tiling: { x: 1, y: 1 },
-                        uvScroll: { x: 0, y: 0 },
-                        transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                        tiling: [1, 1],
+                        uvScroll: [0, 0],
+                        transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
                         drivers: []
                     },
                     {
@@ -1606,8 +1606,8 @@
                         renderQueue: 3000,
                         minVertexDistance: 0.004,
                         colorOverAge: { interpolationType: 1, points: [
-                            { time: 0, value: { r: 1, g: 1, b: 1, a: 1 } },
-                            { time: 1, value: { r: 1, g: 1, b: 1, a: 0 } }
+                            { time: 0, value: [1, 1, 1, 1] },
+                            { time: 1, value: [1, 1, 1, 0] }
                         ] },
                         alphaOverAge: { interpolationType: 1, points: [] },
                         widthOverAge: { interpolationType: 1, points: [] },
@@ -1616,9 +1616,9 @@
                         blurFrames: 1.5,
                         useTexture: false,
                         texturePath: '',
-                        tiling: { x: 1, y: 1 },
-                        uvScroll: { x: 0, y: 0 },
-                        transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                        tiling: [1, 1],
+                        uvScroll: [0, 0],
+                        transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
                         drivers: []
                     }
                 ],
@@ -1640,11 +1640,11 @@
                     triggerPercentage: 0.7,
                     triggerPeriod: 0.05,
                     burstSpread: 0.8,
-                    color: { r: 1, g: 1, b: 1, a: 1 },
+                    color: [1, 1, 1, 1],
                     colorOverLifetime: { interpolationType: 1, points: [] },
                     alphaOverLifetime: { interpolationType: 1, points: [] },
                     scaleOverLifetime: { interpolationType: 1, points: [] },
-                    transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                    transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
                     drivers: [],
                     useTexture: false,
                     texturePath: ''
@@ -1653,7 +1653,7 @@
                     enabled: true,
                     intensity: 1.5,
                     radius: 0.4,
-                    color: { r: 0, g: 0.8, b: 1, a: 1 },
+                    color: [0, 0.8, 1, 1],
                     pulseGradient: { interpolationType: 1, points: [] },
                     pulseEnabled: false,
                     pulseSpeed: 1.0,
@@ -1669,7 +1669,7 @@
                     stiffness: 60.0,
                     damping: 8.0,
                     gravityY: -1.5,
-                    color: { r: 1, g: 1, b: 1, a: 1 }
+                    color: [1, 1, 1, 1]
                 },
                 drivers: []
             };
@@ -1921,13 +1921,13 @@
                     const grad = ctx.createLinearGradient(0, 0, w, 0);
                     points.forEach(p => {
                         const c = p.value;
-                        grad.addColorStop(p.time, `rgba(${c.r*255},${c.g*255},${c.b*255},${c.a})`);
+                        grad.addColorStop(p.time, `rgba(${c[0]*255},${c[1]*255},${c[2]*255},${c[3]})`);
                     });
                     ctx.fillStyle = grad;
                     ctx.fillRect(0, 0, w, h);
                 } else if (points.length === 1) {
                     const c = points[0].value;
-                    ctx.fillStyle = `rgba(${c.r*255},${c.g*255},${c.b*255},${c.a})`;
+                    ctx.fillStyle = `rgba(${c[0]*255},${c[1]*255},${c[2]*255},${c[3]})`;
                     ctx.fillRect(0, 0, w, h);
                 } else {
                     // Default checkerboard
@@ -1943,7 +1943,7 @@
                 // Stops
                 points.forEach((p, i) => {
                     const x = p.time * w;
-                    ctx.fillStyle = `rgba(${p.value.r*255},${p.value.g*255},${p.value.b*255},${p.value.a})`;
+                    ctx.fillStyle = `rgba(${p.value[0]*255},${p.value[1]*255},${p.value[2]*255},${p.value[3]})`;
                     ctx.beginPath();
                     ctx.moveTo(x - 8, 0);
                     ctx.lineTo(x + 8, 0);
@@ -2015,14 +2015,14 @@
             points.forEach((point, index) => {
                 const div = document.createElement('div');
                 div.className = 'gradient-stop';
-                const hex = rgbToHex(point.value.r, point.value.g, point.value.b);
+                const hex = rgbToHex(point.value[0], point.value[1], point.value[2]);
                 div.innerHTML = `
                     <div class="stop-header">
                         <input type="color" value="${hex}" data-index="${index}" data-prop="color">
                         <input type="number" step="0.01" min="0" max="1" value="${point.time.toFixed(2)}" data-index="${index}" data-prop="time" style="width: 55px;">
                         <button type="button" data-index="${index}">✕</button>
                     </div>
-                    <input type="number" step="0.01" min="0" max="1" value="${point.value.a.toFixed(2)}" data-index="${index}" data-prop="alpha" placeholder="Alpha" style="width: 55px;">
+                    <input type="number" step="0.01" min="0" max="1" value="${point.value[3].toFixed(2)}" data-index="${index}" data-prop="alpha" placeholder="Alpha" style="width: 55px;">
                 `;
                 container.appendChild(div);
             });
@@ -2033,13 +2033,11 @@
                     const points = [...gradient.points].sort((a, b) => a.time - b.time);
                     if (prop === 'color') {
                         const rgb = hexToRgb(input.value);
-                        points[idx].value.r = rgb.r;
-                        points[idx].value.g = rgb.g;
-                        points[idx].value.b = rgb.b;
+                        points[idx].value = [rgb.r, rgb.g, rgb.b, points[idx].value[3]];
                     } else if (prop === 'time') {
                         points[idx].time = parseFloat(input.value);
                     } else if (prop === 'alpha') {
-                        points[idx].value.a = parseFloat(input.value);
+                        points[idx].value[3] = parseFloat(input.value);
                     }
                     gradient.points = points;
                     gradient.points.sort((a, b) => a.time - b.time);
@@ -2067,7 +2065,7 @@
             const editor = gradientEditors.get(id);
             if (!editor) return;
             const gradient = editor.gradient;
-            gradient.points.push({ time: 0.5, value: { r: 1, g: 1, b: 1, a: 1 } });
+            gradient.points.push({ time: 0.5, value: [1, 1, 1, 1] });
             gradient.points.sort((a, b) => a.time - b.time);
             updateGradientStopsUI(id, gradient);
             editor.draw();
@@ -2116,10 +2114,10 @@
 
             // Blade
             document.getElementById('bladeEnabled').checked = p.blade.enabled;
-            document.getElementById('bladeBaseColor').value = rgbToHex(p.blade.baseColor.r, p.blade.baseColor.g, p.blade.baseColor.b);
-            document.getElementById('bladeBaseColorHex').value = rgbToHex(p.blade.baseColor.r, p.blade.baseColor.g, p.blade.baseColor.b);
-            document.getElementById('bladeEmissionColor').value = rgbToHex(p.blade.emissionColor.r, p.blade.emissionColor.g, p.blade.emissionColor.b);
-            document.getElementById('bladeEmissionColorHex').value = rgbToHex(p.blade.emissionColor.r, p.blade.emissionColor.g, p.blade.emissionColor.b);
+            document.getElementById('bladeBaseColor').value = rgbToHex(p.blade.baseColor[0], p.blade.baseColor[1], p.blade.baseColor[2]);
+            document.getElementById('bladeBaseColorHex').value = rgbToHex(p.blade.baseColor[0], p.blade.baseColor[1], p.blade.baseColor[2]);
+            document.getElementById('bladeEmissionColor').value = rgbToHex(p.blade.emissionColor[0], p.blade.emissionColor[1], p.blade.emissionColor[2]);
+            document.getElementById('bladeEmissionColorHex').value = rgbToHex(p.blade.emissionColor[0], p.blade.emissionColor[1], p.blade.emissionColor[2]);
             document.getElementById('bladeEmissionIntensity').value = p.blade.emissionIntensity;
             document.getElementById('bladeEmissionIntensityVal').textContent = p.blade.emissionIntensity.toFixed(1);
             document.getElementById('bladeRadius').value = p.blade.radius;
@@ -2188,8 +2186,8 @@
             document.getElementById('sparksTriggerPctVal').textContent = p.sparks.triggerPercentage.toFixed(2);
             document.getElementById('sparksTriggerPeriod').value = p.sparks.triggerPeriod;
             document.getElementById('sparksTriggerPeriodVal').textContent = p.sparks.triggerPeriod.toFixed(2);
-            document.getElementById('sparksColor').value = rgbToHex(p.sparks.color.r, p.sparks.color.g, p.sparks.color.b);
-            document.getElementById('sparksColorHex').value = rgbToHex(p.sparks.color.r, p.sparks.color.g, p.sparks.color.b);
+            document.getElementById('sparksColor').value = rgbToHex(p.sparks.color[0], p.sparks.color[1], p.sparks.color[2]);
+            document.getElementById('sparksColorHex').value = rgbToHex(p.sparks.color[0], p.sparks.color[1], p.sparks.color[2]);
 
             const sparksColorEditor = gradientEditors.get('sparksColorGradient');
             if (sparksColorEditor) {
@@ -2204,8 +2202,8 @@
             document.getElementById('glowIntensityVal').textContent = p.glow.intensity.toFixed(1);
             document.getElementById('glowRadius').value = p.glow.radius;
             document.getElementById('glowRadiusVal').textContent = p.glow.radius.toFixed(2);
-            document.getElementById('glowColor').value = rgbToHex(p.glow.color.r, p.glow.color.g, p.glow.color.b);
-            document.getElementById('glowColorHex').value = rgbToHex(p.glow.color.r, p.glow.color.g, p.glow.color.b);
+            document.getElementById('glowColor').value = rgbToHex(p.glow.color[0], p.glow.color[1], p.glow.color[2]);
+            document.getElementById('glowColorHex').value = rgbToHex(p.glow.color[0], p.glow.color[1], p.glow.color[2]);
             document.getElementById('glowPulseEnabled').checked = p.glow.pulseEnabled;
             document.getElementById('glowPulseOptions').classList.toggle('hidden', !p.glow.pulseEnabled);
             if (p.glow.pulseEnabled) {
@@ -2230,8 +2228,8 @@
                 document.getElementById('boltsDampingVal').textContent = p.bolts.damping.toFixed(1);
                 document.getElementById('boltsGravity').value = p.bolts.gravityY;
                 document.getElementById('boltsGravityVal').textContent = p.bolts.gravityY.toFixed(1);
-                document.getElementById('boltsColor').value = rgbToHex(p.bolts.color.r, p.bolts.color.g, p.bolts.color.b);
-                document.getElementById('boltsColorHex').value = rgbToHex(p.bolts.color.r, p.bolts.color.g, p.bolts.color.b);
+                document.getElementById('boltsColor').value = rgbToHex(p.bolts.color[0], p.bolts.color[1], p.bolts.color[2]);
+                document.getElementById('boltsColorHex').value = rgbToHex(p.bolts.color[0], p.bolts.color[1], p.bolts.color[2]);
             }
 
             // Global Drivers
@@ -2248,10 +2246,10 @@
             p.blade.enabled = document.getElementById('bladeEnabled').checked;
             const baseHex = document.getElementById('bladeBaseColor').value;
             const baseRgb = hexToRgb(baseHex);
-            p.blade.baseColor = { ...baseRgb, a: p.blade.baseColor.a };
+            p.blade.baseColor = [baseRgb.r, baseRgb.g, baseRgb.b, p.blade.baseColor[3] || 1];
             const emissionHex = document.getElementById('bladeEmissionColor').value;
             const emissionRgb = hexToRgb(emissionHex);
-            p.blade.emissionColor = { ...emissionRgb, a: p.blade.emissionColor.a };
+            p.blade.emissionColor = [emissionRgb.r, emissionRgb.g, emissionRgb.b, p.blade.emissionColor[3] || 1];
             p.blade.emissionIntensity = parseFloat(document.getElementById('bladeEmissionIntensity').value);
             p.blade.radius = parseFloat(document.getElementById('bladeRadius').value);
             p.blade.stretchBias = parseFloat(document.getElementById('bladeStretchBias').value);
@@ -2289,7 +2287,7 @@
             p.sparks.triggerPeriod = parseFloat(document.getElementById('sparksTriggerPeriod').value);
             const sparksColorHex = document.getElementById('sparksColor').value;
             const sparksColorRgb = hexToRgb(sparksColorHex);
-            p.sparks.color = { ...sparksColorRgb, a: p.sparks.color.a };
+            p.sparks.color = [sparksColorRgb.r, sparksColorRgb.g, sparksColorRgb.b, p.sparks.color[3] || 1];
 
             // Glow
             p.glow.enabled = document.getElementById('glowEnabled').checked;
@@ -2297,7 +2295,7 @@
             p.glow.radius = parseFloat(document.getElementById('glowRadius').value);
             const glowColorHex = document.getElementById('glowColor').value;
             const glowColorRgb = hexToRgb(glowColorHex);
-            p.glow.color = { ...glowColorRgb, a: p.glow.color.a };
+            p.glow.color = [glowColorRgb.r, glowColorRgb.g, glowColorRgb.b, p.glow.color[3] || 1];
             p.glow.pulseEnabled = document.getElementById('glowPulseEnabled').checked;
             if (p.glow.pulseEnabled) {
                 p.glow.pulseSpeed = parseFloat(document.getElementById('glowPulseSpeed').value);
@@ -2315,7 +2313,7 @@
                 p.bolts.gravityY = parseFloat(document.getElementById('boltsGravity').value);
                 const boltsColorHex = document.getElementById('boltsColor').value;
                 const boltsColorRgb = hexToRgb(boltsColorHex);
-                p.bolts.color = { ...boltsColorRgb, a: p.bolts.color.a };
+                p.bolts.color = [boltsColorRgb.r, boltsColorRgb.g, boltsColorRgb.b, p.bolts.color[3] || 1];
             }
 
             // Global Drivers
@@ -2674,8 +2672,8 @@
                 renderQueue: 3000,
                 minVertexDistance: 0.004,
                 colorOverAge: { interpolationType: 1, points: [
-                    { time: 0, value: { r: 1, g: 1, b: 1, a: 1 } },
-                    { time: 1, value: { r: 1, g: 1, b: 1, a: 0 } }
+                    { time: 0, value: [1, 1, 1, 1] },
+                    { time: 1, value: [1, 1, 1, 0] }
                 ] },
                 alphaOverAge: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
                 widthOverAge: { interpolationType: 1, points: [], valueFrom: 0, valueTo: 1 },
@@ -2684,9 +2682,9 @@
                 blurFrames: 0,
                 useTexture: false,
                 texturePath: '',
-                tiling: { x: 1, y: 1 },
-                uvScroll: { x: 0, y: 0 },
-                transform: { position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+                tiling: [1, 1],
+                uvScroll: [0, 0],
+                transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
                 drivers: []
             };
             preset.trails.push(newTrail);
@@ -2774,8 +2772,8 @@
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
             const saberLength = Math.min(rect.width, rect.height) * 0.7;
-            const bladeColor = preset.blade.enabled ? `rgba(${Math.round(preset.blade.emissionColor.r * 255)}, ${Math.round(preset.blade.emissionColor.g * 255)}, ${Math.round(preset.blade.emissionColor.b * 255)}, ${preset.blade.emissionColor.a})` : '#00ccff';
-            const glowColor = `rgba(${Math.round(preset.glow.color.r * 255)}, ${Math.round(preset.glow.color.g * 255)}, ${Math.round(preset.glow.color.b * 255)}, ${preset.glow.color.a})`;
+            const bladeColor = preset.blade.enabled ? `rgba(${Math.round(preset.blade.emissionColor[0] * 255)}, ${Math.round(preset.blade.emissionColor[1] * 255)}, ${Math.round(preset.blade.emissionColor[2] * 255)}, ${preset.blade.emissionColor[3]})` : '#00ccff';
+            const glowColor = `rgba(${Math.round(preset.glow.color[0] * 255)}, ${Math.round(preset.glow.color[1] * 255)}, ${Math.round(preset.glow.color[2] * 255)}, ${preset.glow.color[3]})`;
 
             function drawFrame(timestamp) {
                 previewTime = timestamp * 0.001;
@@ -2854,7 +2852,7 @@
                     // Trails preview (simplified)
                     preset.trails.forEach((trail, ti) => {
                         if (!trail.enabled) return;
-                        const trailColor = `rgba(${Math.round(preset.blade.emissionColor.r * 255)}, ${Math.round(preset.blade.emissionColor.g * 255)}, ${Math.round(preset.blade.emissionColor.b * 255)}, 0.3)`;
+                        const trailColor = `rgba(${Math.round(preset.blade.emissionColor[0] * 255)}, ${Math.round(preset.blade.emissionColor[1] * 255)}, ${Math.round(preset.blade.emissionColor[2] * 255)}, 0.3)`;
                         ctx.strokeStyle = trailColor;
                         ctx.lineWidth = trail.width * 500;
                         ctx.lineCap = 'round';
@@ -2954,16 +2952,16 @@
                 case 'blue':
                     preset = getDefaultPreset(state.activeSaber);
                     preset.name = isLeft ? 'Blue Saber' : 'Blue Saber';
-                    preset.blade.baseColor = { r: 0, g: 0.8, b: 1, a: 1 };
-                    preset.blade.emissionColor = { r: 0, g: 0.8, b: 1, a: 1 };
-                    preset.glow.color = { r: 0, g: 0.8, b: 1, a: 1 };
+                    preset.blade.baseColor = [0, 0.8, 1, 1];
+                    preset.blade.emissionColor = [0, 0.8, 1, 1];
+                    preset.glow.color = [0, 0.8, 1, 1];
                     break;
                 case 'red':
                     preset = getDefaultPreset(state.activeSaber);
                     preset.name = isLeft ? 'Red Saber' : 'Red Saber';
-                    preset.blade.baseColor = { r: 1, g: 0.2, b: 0.2, a: 1 };
-                    preset.blade.emissionColor = { r: 1, g: 0.2, b: 0.2, a: 1 };
-                    preset.glow.color = { r: 1, g: 0.2, b: 0.2, a: 1 };
+                    preset.blade.baseColor = [1, 0.2, 0.2, 1];
+                    preset.blade.emissionColor = [1, 0.2, 0.2, 1];
+                    preset.glow.color = [1, 0.2, 0.2, 1];
                     break;
                 case 'rainbow':
                     preset = getDefaultPreset(state.activeSaber);
