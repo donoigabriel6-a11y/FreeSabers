@@ -2869,8 +2869,13 @@
             previewAnimId = requestAnimationFrame(drawFrame);
         }
 
-        // ============================================================================
-        // File Operations
+        // Hide loading overlay once preview starts
+        const loadingEl = document.getElementById('previewLoading');
+        if (loadingEl) loadingEl.style.display = 'none';
+    }
+
+    // ============================================================================
+    // File Operations
         // ============================================================================
         function downloadJSON() {
             syncUIToPreset(getCurrentPreset());
@@ -3099,7 +3104,8 @@
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if (e.ctrlKey || e.metaKey) {
-                    if (e.key === 's') { e.preventDefault(); downloadJSON; }
+                    if (e.key === 's') { e.preventDefault(); downloadJSON(); }
+                    else if (e.key === 'c') { e.preventDefault(); copyJSON(); }
                     else if (e.key === 'o') { e.preventDefault(); document.getElementById('fileInput').click(); }
                     else if (e.key === 'n') { e.preventDefault(); document.getElementById('btnNew').click(); }
                 }
