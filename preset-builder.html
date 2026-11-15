@@ -1051,7 +1051,7 @@
                             <label>Profile Curve (Radius along blade)</label>
                             <div class="curve-editor" id="bladeProfileCurve"></div>
                             <div class="curve-points" id="bladeProfilePoints"></div>
-                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.75rem; padding: 6px 12px;" onclick="addCurvePoint('bladeProfile')">
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.75rem; padding: 6px 12px;" onclick="addCurvePoint('bladeProfileCurve')">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                                 Add Point
                             </button>
@@ -1192,7 +1192,7 @@
                             <label>Color Over Lifetime</label>
                             <div class="gradient-editor" id="sparksColorGradient"></div>
                             <div class="gradient-stops" id="sparksColorStops"></div>
-                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.75rem; padding: 6px 12px;" onclick="addGradientStop('sparksColor')">
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.75rem; padding: 6px 12px;" onclick="addGradientStop('sparksColorGradient')">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                                 Add Stop
                             </button>
@@ -2414,14 +2414,29 @@
                         <div class="form-group">
                             <label>Color Over Age</label>
                             <div class="gradient-editor trail-colorOverAge" id="trailColorOverAge_${index}"></div>
+                            <div class="gradient-stops" id="trailColorOverAge_${index}Stops"></div>
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.7rem; padding: 4px 10px;" onclick="addGradientStop('trailColorOverAge_${index}')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Stop
+                            </button>
                         </div>
                         <div class="form-group">
                             <label>Alpha Over Age</label>
                             <div class="curve-editor trail-alphaOverAge" id="trailAlphaOverAge_${index}"></div>
+                            <div class="curve-points" id="trailAlphaOverAge_${index}Points"></div>
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.7rem; padding: 4px 10px;" onclick="addCurvePoint('trailAlphaOverAge_${index}')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Point
+                            </button>
                         </div>
                         <div class="form-group">
                             <label>Width Over Age</label>
                             <div class="curve-editor trail-widthOverAge" id="trailWidthOverAge_${index}"></div>
+                            <div class="curve-points" id="trailWidthOverAge_${index}Points"></div>
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.7rem; padding: 4px 10px;" onclick="addCurvePoint('trailWidthOverAge_${index}')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Point
+                            </button>
                         </div>
                     </div>
                     <div class="trail-drivers">
@@ -2534,10 +2549,20 @@
                         <div class="form-group">
                             <label>Value Curve</label>
                             <div class="curve-editor driver-valueCurve" id="${prefix}_valueCurve_${index}"></div>
+                            <div class="curve-points" id="${prefix}_valueCurve_${index}Points"></div>
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.7rem; padding: 4px 10px;" onclick="addCurvePoint('${prefix}_valueCurve_${index}')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Point
+                            </button>
                         </div>
                         <div class="form-group">
                             <label>Color Curve</label>
                             <div class="gradient-editor driver-colorCurve" id="${prefix}_colorCurve_${index}"></div>
+                            <div class="gradient-stops" id="${prefix}_colorCurve_${index}Stops"></div>
+                            <button type="button" class="btn btn-secondary" style="margin-top: 8px; font-size: 0.7rem; padding: 4px 10px;" onclick="addGradientStop('${prefix}_colorCurve_${index}')">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                Add Stop
+                            </button>
                         </div>
                     </div>
                 `;
